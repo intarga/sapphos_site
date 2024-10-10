@@ -1,5 +1,6 @@
 import birl.{type Time}
 import gleam/dynamic
+import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -78,6 +79,15 @@ fn init(_flags) -> #(Model, Effect(Msg)) {
   #(Model(calendar: []), get_events())
 }
 
+fn format_date(raw_event: RawEvent) -> String {
+  let day_of_week =
+    raw_event.start_time |> birl.weekday |> birl.weekday_to_short_string
+  let date = birl.get_day(raw_event.start_time).date |> int.to_string
+  let month = birl.short_string_month(raw_event.start_time)
+  let year = birl.get_day(raw_event.start_time).year |> int.to_string
+  day_of_week <> " " <> date <> " " <> month <> " " <> year
+}
+
 fn process_event(raw_event: RawEvent) -> Event {
   let start_time =
     raw_event.start_time
@@ -97,7 +107,7 @@ fn process_event_list(raw_events: List(RawEvent)) -> List(EventDay) {
     let date =
       list.first(raw_events)
       |> result.unwrap(RawEvent("", None, birl.now(), birl.now()))
-      |> fn(raw_event) { birl.string_month(raw_event.start_time) }
+      |> format_date
     let events =
       raw_events
       |> list.map(process_event)
