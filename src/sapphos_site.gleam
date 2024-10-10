@@ -11,20 +11,44 @@ import lustre/element.{type Element}
 import lustre/element/html
 import lustre_http.{type HttpError}
 
-type Event {
-  Event(summary: String, description: Option(String), start_time: Time)
+type RawEvent {
+  RawEvent(
+    summary: String,
+    description: Option(String),
+    start_time: Time,
+    end_time: Time,
+  )
 }
 
+type Event {
+  Event(
+    summary: String,
+    description: Option(String),
+    start_time: String,
+    end_time: String,
+  )
+}
+
+type EventDay {
+  EventDay(date: String, events: List(Event))
+}
+
+type Calendar =
+  List(EventDay)
+
 type Model {
-  Model(events: List(Event))
+  Model(calendar: Calendar)
 }
 
 pub opaque type Msg {
-  ApiReturnedEvents(Result(List(Event), HttpError))
+  ApiReturnedEvents(Result(List(RawEvent), HttpError))
 }
 
-fn init(_flags) -> #(Model, Effect(Msg)) {
-  #(Model(events: []), get_events())
+fn decode_datetime(dyn: dynamic.Dynamic) {
+  use dt_string <- result.try(dynamic.field("dateTime", dynamic.string)(dyn))
+  result.map_error(birl.parse(dt_string), fn(_) {
+    [dynamic.DecodeError("datetime", dt_string, [""])]
+  })
 }
 
 fn get_events() -> Effect(Msg) {
@@ -37,19 +61,12 @@ fn get_events() -> Effect(Msg) {
       "items",
       dynamic.list(fn(dyn) {
         // io.debug(dyn)
-        dynamic.decode3(
-          Event,
+        dynamic.decode4(
+          RawEvent,
           dynamic.field("summary", dynamic.string),
           dynamic.optional_field("description", dynamic.string),
-          dynamic.field("start", fn(dyn) {
-            use dt_string <- result.try(dynamic.field(
-              "dateTime",
-              dynamic.string,
-            )(dyn))
-            result.map_error(birl.parse(dt_string), fn(_) {
-              [dynamic.DecodeError("datetime", dt_string, [""])]
-            })
-          }),
+          dynamic.field("start", decode_datetime),
+          dynamic.field("end", decode_datetime),
         )(dyn)
       }),
     )
@@ -57,11 +74,45 @@ fn get_events() -> Effect(Msg) {
   lustre_http.get(url, lustre_http.expect_json(decoder, ApiReturnedEvents))
 }
 
+fn init(_flags) -> #(Model, Effect(Msg)) {
+  #(Model(calendar: []), get_events())
+}
+
+fn process_event(raw_event: RawEvent) -> Event {
+  let start_time =
+    raw_event.start_time
+    |> birl.get_time_of_day
+    |> birl.time_of_day_to_short_string
+  let end_time =
+    raw_event.end_time
+    |> birl.get_time_of_day
+    |> birl.time_of_day_to_short_string
+  Event(raw_event.summary, raw_event.description, start_time, end_time)
+}
+
+fn process_event_list(raw_events: List(RawEvent)) -> List(EventDay) {
+  raw_events
+  |> list.chunk(fn(raw_event) { birl.get_day(raw_event.start_time) })
+  |> list.map(fn(raw_events) {
+    let date =
+      list.first(raw_events)
+      |> result.unwrap(RawEvent("", None, birl.now(), birl.now()))
+      |> fn(raw_event) { birl.string_month(raw_event.start_time) }
+    let events =
+      raw_events
+      |> list.map(process_event)
+    EventDay(date, events)
+  })
+}
+
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   io.debug(msg)
 
   case msg {
-    ApiReturnedEvents(Ok(events)) -> #(Model(events), effect.none())
+    ApiReturnedEvents(Ok(raw_events)) -> #(
+      Model(process_event_list(raw_events)),
+      effect.none(),
+    )
     // TODO
     ApiReturnedEvents(Error(_)) -> {
       // io.debug(e)
@@ -70,30 +121,38 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
-fn view_events(events: List(Event)) -> Element(msg) {
-  html.div(
-    [attribute.class("event-list")],
-    list.map(events, fn(event) {
-      io.debug(event.start_time)
-      html.div([attribute.class("event")], [
-        element.text(event.summary),
-        element.text(
-          event.start_time
-          |> birl.get_time_of_day
-          |> birl.time_of_day_to_short_string,
-        ),
-        html.br([]),
-        element.text(case event.description {
-          Some(description) -> description
-          None -> ""
-        }),
-      ])
+fn view_event(event: Event) -> Element(Msg) {
+  html.div([attribute.class("event")], [
+    element.text(event.summary),
+    element.text(event.start_time),
+    element.text(event.end_time),
+    html.br([]),
+    element.text(case event.description {
+      Some(description) -> description
+      None -> ""
     }),
-  )
+  ])
+}
+
+fn view_event_day(event_day: EventDay) -> Element(Msg) {
+  io.debug(event_day.date)
+  html.div([attribute.class("event-day")], [
+    html.div([attribute.class("event-day-header")], [
+      element.text(event_day.date),
+    ]),
+    html.div(
+      [attribute.class("event-list")],
+      list.map(event_day.events, view_event),
+    ),
+  ])
+}
+
+fn view_calendar(calendar: Calendar) -> Element(Msg) {
+  html.div([attribute.class("calendar")], list.map(calendar, view_event_day))
 }
 
 fn view(model: Model) -> Element(Msg) {
-  view_events(model.events)
+  view_calendar(model.calendar)
 }
 
 pub fn main() {
