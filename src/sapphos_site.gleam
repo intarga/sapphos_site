@@ -1,7 +1,9 @@
+import birl.{type Time}
 import gleam/dynamic
 import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/result
 import lustre
 import lustre/attribute
 import lustre/effect.{type Effect}
@@ -10,7 +12,7 @@ import lustre/element/html
 import lustre_http.{type HttpError}
 
 type Event {
-  Event(summary: String, description: Option(String))
+  Event(summary: String, description: Option(String), start_time: Time)
 }
 
 type Model {
@@ -37,11 +39,23 @@ fn get_events() -> Effect(Msg) {
       dynamic.field(
         "items",
         dynamic.list(fn(dyn) {
-          io.debug(dyn)
-          dynamic.decode2(
+          // io.debug(dyn)
+          dynamic.decode3(
             Event,
             dynamic.field("summary", dynamic.string),
             dynamic.optional_field("description", dynamic.string),
+            dynamic.field("start", fn(dyn) {
+              use dt_string <- result.try(dynamic.field(
+                "dateTime",
+                dynamic.string,
+              )(dyn))
+              result.map_error(birl.parse(dt_string), fn(e) {
+                io.println("parse error..")
+                io.debug(e)
+                // TODO: better error type here?
+                [dynamic.DecodeError("datetime", dt_string, [""])]
+              })
+            }),
           )(dyn)
         }),
       ),
@@ -56,7 +70,10 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
     ApiReturnedEvents(Ok(new_model)) -> #(new_model, effect.none())
     // TODO
-    ApiReturnedEvents(Error(_)) -> #(model, effect.none())
+    ApiReturnedEvents(Error(_)) -> {
+      // io.debug(e)
+      #(model, effect.none())
+    }
   }
 }
 
@@ -64,8 +81,14 @@ fn view_events(events: List(Event)) -> Element(msg) {
   html.div(
     [attribute.class("event-list")],
     list.map(events, fn(event) {
+      io.debug(event.start_time)
       html.div([attribute.class("event")], [
         element.text(event.summary),
+        element.text(
+          event.start_time
+          |> birl.get_time_of_day
+          |> birl.time_of_day_to_short_string,
+        ),
         html.br([]),
         element.text(case event.description {
           Some(description) -> description
