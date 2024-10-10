@@ -20,7 +20,7 @@ type Model {
 }
 
 pub opaque type Msg {
-  ApiReturnedEvents(Result(Model, HttpError))
+  ApiReturnedEvents(Result(List(Event), HttpError))
 }
 
 fn init(_flags) -> #(Model, Effect(Msg)) {
@@ -32,33 +32,26 @@ fn get_events() -> Effect(Msg) {
   let url =
     "https://www.googleapis.com/calendar/v3/calendars/1fa82a44ca905662ca167d3d3d28b9c696852f5838be661d3d5b1de552e261bc%40group.calendar.google.com/events?key=AIzaSyD77xGddvaY1SYANkCwFF5yw3mfxt303no&singleEvents=True&orderBy=startTime&timeMin=2024-10-10T00:00:00Z"
 
-  // TODO: can we just decode a list of events here instead of the whole model?
   let decoder =
-    dynamic.decode1(
-      Model,
-      dynamic.field(
-        "items",
-        dynamic.list(fn(dyn) {
-          // io.debug(dyn)
-          dynamic.decode3(
-            Event,
-            dynamic.field("summary", dynamic.string),
-            dynamic.optional_field("description", dynamic.string),
-            dynamic.field("start", fn(dyn) {
-              use dt_string <- result.try(dynamic.field(
-                "dateTime",
-                dynamic.string,
-              )(dyn))
-              result.map_error(birl.parse(dt_string), fn(e) {
-                io.println("parse error..")
-                io.debug(e)
-                // TODO: better error type here?
-                [dynamic.DecodeError("datetime", dt_string, [""])]
-              })
-            }),
-          )(dyn)
-        }),
-      ),
+    dynamic.field(
+      "items",
+      dynamic.list(fn(dyn) {
+        // io.debug(dyn)
+        dynamic.decode3(
+          Event,
+          dynamic.field("summary", dynamic.string),
+          dynamic.optional_field("description", dynamic.string),
+          dynamic.field("start", fn(dyn) {
+            use dt_string <- result.try(dynamic.field(
+              "dateTime",
+              dynamic.string,
+            )(dyn))
+            result.map_error(birl.parse(dt_string), fn(_) {
+              [dynamic.DecodeError("datetime", dt_string, [""])]
+            })
+          }),
+        )(dyn)
+      }),
     )
 
   lustre_http.get(url, lustre_http.expect_json(decoder, ApiReturnedEvents))
@@ -68,7 +61,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   io.debug(msg)
 
   case msg {
-    ApiReturnedEvents(Ok(new_model)) -> #(new_model, effect.none())
+    ApiReturnedEvents(Ok(events)) -> #(Model(events), effect.none())
     // TODO
     ApiReturnedEvents(Error(_)) -> {
       // io.debug(e)
