@@ -1,7 +1,7 @@
 import gleam/dynamic
 import gleam/io
 import gleam/list
-import gleam/option.{type Option}
+import gleam/option.{type Option, None, Some}
 import lustre
 import lustre/attribute
 import lustre/effect.{type Effect}
@@ -26,10 +26,9 @@ fn init(_flags) -> #(Model, Effect(Msg)) {
 }
 
 fn get_events() -> Effect(Msg) {
-  // let url = "https://api.quotable.io/random"
-  // TODO: specify timeMin and timeMax query params
+  // TODO: specify timeMin dynamically
   let url =
-    "https://www.googleapis.com/calendar/v3/calendars/1fa82a44ca905662ca167d3d3d28b9c696852f5838be661d3d5b1de552e261bc%40group.calendar.google.com/events?key=AIzaSyD77xGddvaY1SYANkCwFF5yw3mfxt303no&singleEvents=True"
+    "https://www.googleapis.com/calendar/v3/calendars/1fa82a44ca905662ca167d3d3d28b9c696852f5838be661d3d5b1de552e261bc%40group.calendar.google.com/events?key=AIzaSyD77xGddvaY1SYANkCwFF5yw3mfxt303no&singleEvents=True&orderBy=startTime&timeMin=2024-10-10T00:00:00Z"
 
   // TODO: can we just decode a list of events here instead of the whole model?
   let decoder =
@@ -67,7 +66,11 @@ fn view_events(events: List(Event)) -> Element(msg) {
     list.map(events, fn(event) {
       html.div([attribute.class("event")], [
         element.text(event.summary),
-        // element.text(event.description),
+        html.br([]),
+        element.text(case event.description {
+          Some(description) -> description
+          None -> ""
+        }),
       ])
     }),
   )
