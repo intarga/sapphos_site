@@ -6,33 +6,55 @@
 
     <title>🚧 sapphos_site</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shrikhand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Athiti:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="/priv/static/sapphos_site.css">
     <script type="module" src="/priv/static/sapphos_site.mjs"></script>
   </head>
 
   <body>
-    <section id="hero">
-      <div id="hero-left">
-        <img
-          src="priv/static/sapphos_circle_logo.png"
-          alt="Logo for Sappho's Friends. The words &quot;Sappho's Friends&quot; on a gradient background with sparkles"
-          id="hero-img"
-        />
-      </div>
-      <div id="hero-right">
-        <div id="hero-right-content">
-          <!-- <h1 class="hero-title">Sappho's Friends</h1> -->
-          <p class="hero-text">
-            Sappho's Friends is a social group for queer women and nonbinary people in Oslo
-          </p>
-          <a href="#agenda">
-            <button class="hero-btn">Hang out with us!</button>
-          </a>
+    <main>
+      <section id="hero">
+        <div id="hero-left">
+          <img
+            src="priv/static/sapphos_circle_logo.png"
+            alt="Logo for Sappho's Friends. The words &quot;Sappho's Friends&quot; on a gradient background with sparkles"
+            id="hero-img"
+          />
         </div>
-      </div>
-    </section>
-    <section id="agenda">
-      <div id="app"></div>
-    </section>
+        <div id="hero-right">
+          <div id="hero-right-content">
+            <!-- <h1 class="hero-title">Sappho's Friends</h1> -->
+            <p class="hero-text">
+              <strong>Sappho's Friends</strong> is a social group for <strong>queer women</strong> and <strong>nonbinary</strong> people in <strong>Oslo</strong>
+            </p>
+            <a href="#agenda">
+              <button class="hero-btn">Hang out with us!</button>
+            </a>
+          </div>
+        </div>
+      </section>
+      <section id="about">
+        <h2>About us</h2>
+        <div id="about-text">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer porttitor, lacus eget porttitor fermentum, erat justo vulputate turpis, at dictum nisi felis vitae mauris. Vestibulum consectetur placerat sagittis. Maecenas fermentum leo at lorem condimentum, pharetra dictum turpis finibus. Cras a arcu luctus, placerat eros id, blandit nunc. Integer non nunc nec magna ullamcorper scelerisque. Cras accumsan non justo aliquet tempor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In feugiat tincidunt orci. Integer laoreet diam ut molestie imperdiet. Sed a tortor congue, iaculis erat a, vestibulum diam. Morbi dui sapien, scelerisque eget lacus et, pretium aliquam sapien. Aenean libero ex, mollis ut augue sed, consequat sagittis nunc. Sed luctus est id est euismod egestas.
+          </br>
+          </br>
+
+          Cras tincidunt vehicula posuere. Aenean iaculis non nunc quis facilisis. Fusce aliquam dolor commodo vestibulum ultricies. Nulla laoreet, nunc eu commodo fermentum, leo dui dignissim quam, eget pharetra elit eros id elit. Pellentesque varius libero in massa dapibus placerat. Suspendisse id lectus in nibh viverra facilisis. Nunc non nunc ac nulla volutpat vestibulum. Mauris molestie mi felis, vitae tincidunt dui accumsan nec. Ut tincidunt ex sit amet eros efficitur, vitae tincidunt eros iaculis. Nulla hendrerit efficitur nibh, pretium tempus mauris. Vestibulum facilisis justo semper turpis ornare, id vulputate erat cursus. Mauris enim sapien, aliquam id augue et, egestas blandit odio. Suspendisse commodo neque quis congue pulvinar.
+          </br>
+          </br>
+
+          Nunc nec urna risus. Nullam maximus auctor eros vitae congue. Aliquam porttitor eros ligula, a pretium nisi euismod nec. Integer pretium, quam eget bibendum hendrerit, arcu tellus semper purus, in varius mauris augue et augue. Integer eros quam, semper id molestie sed, consectetur vel eros. Nam vitae ex at nunc feugiat mattis vitae quis arcu. Ut finibus sodales nisi, a viverra quam porta vel.
+       </div>
+      </section>
+      <section id="agenda">
+        <h2>Upcoming Events</h2>
+        <div id="app"></div>
+      </section>
+    </main>
   </body>
 </html>
