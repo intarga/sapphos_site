@@ -1,0 +1,55 @@
+:root {
+  --font-sm: 0.9rem;
+  --font-md: 1rem;
+  --font-ml: 1.5rem;
+  --font-lg: 2rem;
+  --font-xl: 3rem;
+}
+
+body {
+  font-family: Sans-Serif;
+}
+
+.event-day {
+  margin: 1em;
+  font-size: var(--font-ml);
+}
+
+.event {
+  font-size: var(--font-md);
+  margin: 0.5em 0;
+  position: relative;
+}
+
+.event-header {
+  display: grid;
+  grid-template-columns: 1fr 3em;
+}
+
+.event-title {
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.event-start {
+  text-align: right;
+}
+
+.event-loc {
+  color: gray;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.event-end {
+  text-align: right;
+  color: gray;
+}
+
+.event-text {
+  font-size: var(--font-sm);
+  margin: 0.5em 0;
+}

@@ -126,19 +126,26 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 
 fn view_event(event: Event) -> Element(Msg) {
   html.div([attribute.class("event")], [
-    element.text(event.summary),
-    element.text(event.start_time),
-    element.text(event.end_time),
-    html.br([]),
-    element.text(case event.description {
-      Some(description) -> description
-      None -> ""
-    }),
+    html.div([attribute.class("event-header")], [
+      html.div([attribute.class("event-title")], [element.text(event.summary)]),
+      html.div([attribute.class("event-start")], [
+        element.text(event.start_time),
+      ]),
+      html.div([attribute.class("event-loc")], [
+        element.text("location placeholder"),
+      ]),
+      html.div([attribute.class("event-end")], [element.text(event.end_time)]),
+    ]),
+    html.div([attribute.class("event-text")], [
+      element.text(case event.description {
+        Some(description) -> description
+        None -> ""
+      }),
+    ]),
   ])
 }
 
 fn view_event_day(event_day: EventDay) -> Element(Msg) {
-  io.debug(event_day.date)
   html.div([attribute.class("event-day")], [
     html.div([attribute.class("event-day-header")], [
       element.text(event_day.date),
@@ -151,6 +158,7 @@ fn view_event_day(event_day: EventDay) -> Element(Msg) {
 }
 
 fn view_calendar(calendar: Calendar) -> Element(Msg) {
+  io.debug(calendar)
   html.div([attribute.class("calendar")], list.map(calendar, view_event_day))
 }
 
