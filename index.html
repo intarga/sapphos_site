@@ -6,12 +6,33 @@
 
     <title>🚧 sapphos_site</title>
 
-    <!-- Uncomment this if you add the TailwindCSS integration -->
     <link rel="stylesheet" href="/priv/static/sapphos_site.css">
     <script type="module" src="/priv/static/sapphos_site.mjs"></script>
   </head>
 
   <body>
-    <div id="app"></div>
+    <section id="hero">
+      <div id="hero-left">
+        <img
+          src="priv/static/sapphos_circle_logo.png"
+          alt="Logo for Sappho's Friends. The words &quot;Sappho's Friends&quot; on a gradient background with sparkles"
+          id="hero-img"
+        />
+      </div>
+      <div id="hero-right">
+        <div id="hero-right-content">
+          <!-- <h1 class="hero-title">Sappho's Friends</h1> -->
+          <p class="hero-text">
+            Sappho's Friends is a social group for queer women and nonbinary people in Oslo
+          </p>
+          <a href="#agenda">
+            <button class="hero-btn">Hang out with us!</button>
+          </a>
+        </div>
+      </div>
+    </section>
+    <section id="agenda">
+      <div id="app"></div>
+    </section>
   </body>
 </html>
