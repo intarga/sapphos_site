@@ -30,15 +30,15 @@ type Event {
   )
 }
 
-type EventDay {
-  EventDay(date: String, events: List(Event))
+type AgendaDay {
+  AgendaDay(date: String, events: List(Event))
 }
 
-type Calendar =
-  List(EventDay)
+type Agenda =
+  List(AgendaDay)
 
 type Model {
-  Model(calendar: Calendar)
+  Model(agenda: Agenda)
 }
 
 pub opaque type Msg {
@@ -73,7 +73,7 @@ fn get_events() -> Effect(Msg) {
 }
 
 fn init(_flags) -> #(Model, Effect(Msg)) {
-  #(Model(calendar: []), get_events())
+  #(Model(agenda: []), get_events())
 }
 
 fn format_date(raw_event: RawEvent) -> String {
@@ -97,7 +97,7 @@ fn process_event(raw_event: RawEvent) -> Event {
   Event(raw_event.summary, raw_event.description, start_time, end_time)
 }
 
-fn process_event_list(raw_events: List(RawEvent)) -> List(EventDay) {
+fn process_event_list(raw_events: List(RawEvent)) -> List(AgendaDay) {
   raw_events
   |> list.chunk(fn(raw_event) { birl.get_day(raw_event.start_time) })
   |> list.map(fn(raw_events) {
@@ -107,7 +107,7 @@ fn process_event_list(raw_events: List(RawEvent)) -> List(EventDay) {
     let events =
       raw_events
       |> list.map(process_event)
-    EventDay(date, events)
+    AgendaDay(date, events)
   })
 }
 
@@ -145,9 +145,9 @@ fn view_event(event: Event) -> Element(Msg) {
   ])
 }
 
-fn view_event_day(event_day: EventDay) -> Element(Msg) {
-  html.div([attribute.class("event-day")], [
-    html.div([attribute.class("event-day-header")], [
+fn view_event_day(event_day: AgendaDay) -> Element(Msg) {
+  html.div([attribute.class("agenda-day")], [
+    html.div([attribute.class("agenda-day-header")], [
       element.text(event_day.date),
     ]),
     html.div(
@@ -157,13 +157,13 @@ fn view_event_day(event_day: EventDay) -> Element(Msg) {
   ])
 }
 
-fn view_calendar(calendar: Calendar) -> Element(Msg) {
+fn view_agenda(calendar: Agenda) -> Element(Msg) {
   io.debug(calendar)
-  html.div([attribute.class("calendar")], list.map(calendar, view_event_day))
+  html.div([attribute.class("agenda")], list.map(calendar, view_event_day))
 }
 
 fn view(model: Model) -> Element(Msg) {
-  view_calendar(model.calendar)
+  view_agenda(model.agenda)
 }
 
 pub fn main() {
