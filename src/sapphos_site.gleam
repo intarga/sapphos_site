@@ -60,16 +60,13 @@ fn get_events() -> Effect(Msg) {
   let decoder =
     dynamic.field(
       "items",
-      dynamic.list(fn(dyn) {
-        // io.debug(dyn)
-        dynamic.decode4(
-          RawEvent,
-          dynamic.field("summary", dynamic.string),
-          dynamic.optional_field("description", dynamic.string),
-          dynamic.field("start", decode_datetime),
-          dynamic.field("end", decode_datetime),
-        )(dyn)
-      }),
+      dynamic.list(dynamic.decode4(
+        RawEvent,
+        dynamic.field("summary", dynamic.string),
+        dynamic.optional_field("description", dynamic.string),
+        dynamic.field("start", decode_datetime),
+        dynamic.field("end", decode_datetime),
+      )),
     )
 
   lustre_http.get(url, lustre_http.expect_json(decoder, ApiReturnedEvents))
@@ -104,10 +101,9 @@ fn process_event_list(raw_events: List(RawEvent)) -> List(EventDay) {
   raw_events
   |> list.chunk(fn(raw_event) { birl.get_day(raw_event.start_time) })
   |> list.map(fn(raw_events) {
-    let date =
+    let assert Ok(date) =
       list.first(raw_events)
-      |> result.unwrap(RawEvent("", None, birl.now(), birl.now()))
-      |> format_date
+      |> result.map(format_date)
     let events =
       raw_events
       |> list.map(process_event)
@@ -116,16 +112,13 @@ fn process_event_list(raw_events: List(RawEvent)) -> List(EventDay) {
 }
 
 fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
-  io.debug(msg)
-
   case msg {
     ApiReturnedEvents(Ok(raw_events)) -> #(
       Model(process_event_list(raw_events)),
       effect.none(),
     )
-    // TODO
-    ApiReturnedEvents(Error(_)) -> {
-      // io.debug(e)
+    ApiReturnedEvents(Error(e)) -> {
+      io.debug(e)
       #(model, effect.none())
     }
   }
