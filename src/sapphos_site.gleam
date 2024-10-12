@@ -55,10 +55,36 @@ fn decode_datetime(dyn: dynamic.Dynamic) {
   })
 }
 
+fn now_rfc3339() -> String {
+  let iso = birl.now() |> birl.to_iso8601
+  let assert Ok(#(pre_dot, _post_dot)) = string.split_once(iso, ".")
+  // let #(post_sign, tz_sign) = case string.split_once(post_dot, "+") {
+  //   Ok(#(_, post_sign)) -> #(post_sign, "+")
+  //   Error(_) -> {
+  //     let assert Ok(#(_, post_sign)) = string.split_once(post_dot, "-")
+  //     #(post_sign, "-")
+  //   }
+  // }
+  // FIXME: Google's API apparently doesn't like non UTC stamps???
+  // This isn't quite correct because we just removed the time offset, really
+  // we should calculate a correct UTC timestamp, but birl doesn't seem to
+  // support that, so I guess we have to make our own formatter, or fix tempo
+  pre_dot <> "Z"
+  //tz_sign <> post_sign
+}
+
 fn get_events() -> Effect(Msg) {
-  // TODO: specify timeMin dynamically
+  let calendar_id =
+    "1fa82a44ca905662ca167d3d3d28b9c696852f5838be661d3d5b1de552e261bc%40group.calendar.google.com"
+  let key = "AIzaSyD77xGddvaY1SYANkCwFF5yw3mfxt303no"
+  let time_min = now_rfc3339()
   let url =
-    "https://www.googleapis.com/calendar/v3/calendars/1fa82a44ca905662ca167d3d3d28b9c696852f5838be661d3d5b1de552e261bc%40group.calendar.google.com/events?key=AIzaSyD77xGddvaY1SYANkCwFF5yw3mfxt303no&singleEvents=True&orderBy=startTime&timeMin=2024-10-10T00:00:00Z"
+    "https://www.googleapis.com/calendar/v3/calendars/"
+    <> calendar_id
+    <> "/events?key="
+    <> key
+    <> "&singleEvents=True&orderBy=startTime&timeMin="
+    <> time_min
 
   let decoder =
     dynamic.field(
@@ -175,7 +201,6 @@ fn view_event_day(event_day: AgendaDay) -> Element(Msg) {
 }
 
 fn view_agenda(calendar: Agenda) -> Element(Msg) {
-  io.debug(calendar)
   html.div([attribute.class("agenda")], list.map(calendar, view_event_day))
 }
 
