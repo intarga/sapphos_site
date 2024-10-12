@@ -5,6 +5,7 @@ import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 import lustre
 import lustre/attribute
 import lustre/effect.{type Effect}
@@ -78,11 +79,15 @@ fn init(_flags) -> #(Model, Effect(Msg)) {
 
 fn format_date(raw_event: RawEvent) -> String {
   let day_of_week =
-    raw_event.start_time |> birl.weekday |> birl.weekday_to_short_string
+    raw_event.start_time
+    |> birl.weekday
+    |> birl.weekday_to_short_string
+    |> string.uppercase
   let date = birl.get_day(raw_event.start_time).date |> int.to_string
-  let month = birl.short_string_month(raw_event.start_time)
-  let year = birl.get_day(raw_event.start_time).year |> int.to_string
-  day_of_week <> " " <> date <> " " <> month <> " " <> year
+  let month = birl.short_string_month(raw_event.start_time) |> string.uppercase
+  // let year = birl.get_day(raw_event.start_time).year |> int.to_string
+  day_of_week <> " " <> date <> " " <> month
+  //<> " " <> year
 }
 
 fn process_event(raw_event: RawEvent) -> Event {

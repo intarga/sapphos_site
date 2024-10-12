@@ -1,49 +1,75 @@
 :root {
   --font-sm: 0.9rem;
   --font-md: 1rem;
+  --font-mm: 1.25rem;
   --font-ml: 1.5rem;
   --font-lg: 2rem;
   --font-xl: 3rem;
+
   --content-width-xl: 70rem;
-  --content-width: 40rem;
+  --content-width: 45rem;
   --content-width-prose: 30rem;
-  --sapphos-pink: #f48292;
-  --sapphos-light-yellow: #fffceb;
+  --content-width-column: 20rem;
+
+  --sky-blue: #71c3d6;
+  --ivory: #fffceb;
+  --salmon-pink: #f7a1ad/*#f48292*/;
+  --space-cadet: #30354b;
+  --jade: #5da271;
+  /* --dark-purple: #320a28; */
+  --palatinate: #661452;
+
   --gap-1: 1rem;
   --gap-2: calc(var(--gap-1) * 2);
+  --gap-6: calc(var(--gap-1) * 6);
 }
 
 body {
   font-family: Athiti, sans-serif;
-  max-width: var(--content-width-xl);
-  background-color: var(--sapphos-light-yellow);
+  /* max-width: var(--content-width-xl); */
+  background-color: var(--space-cadet);
   margin: auto;
   line-height: 1.25;
 }
 
 h2 {
+  margin: 1.5rem 0;
   font-family: Shrikhand, serif;
-  color: var(--sapphos-pink);
+  color: var(--salmon-pink);
   font-size: var(--font-xl);
+  text-align: center;
 }
 
 #hero {
-  /* display: grid; */
-  /* grid-template-columns: repeat(2, 1fr); */
-  /* min-height: 50dvh; */
+  /* background-color: var(--ivory); */
+  background: url(/priv/static/hero_background_stars.svg), url(/priv/static/hero_background_layers.svg);
+  background-size: cover;
+  padding: 3em 0;
+
+  anchor-name: --anchor-hero;
+
+  position: relative;
+}
+
+#hero-container {
   max-width: var(--content-width);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 2rem auto;
+  margin: auto;
+  padding: 2rem;
   gap: var(--gap-2);
 }
 
 #hero-left {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  /* text-align: center; */
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
+  font-family: Shrikhand;
+  font-size: var(--font-xl);
+  /* color: var(--palatinate); */
+  color: var(--space-cadet);
 }
 
 #hero-right-content {
@@ -62,21 +88,51 @@ h2 {
   margin-top: 1em;
 }
 
+#hero-transition {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* position-anchor: --anchor-hero; */
+  /* position-area: span-start; */
+  /* TODO: we can maybe gap this better if we crop down transparency on the svg? */
+  height: 12rem;
+  width: 100%;
+}
+
 #about {
-  max-width: var(--content-width-prose);
+  max-width: var(--content-width);
   margin: auto;
   padding: 1rem 0;
+
+  color: var(--ivory);
+
+  text-align: justify;
+  text-justify: inter-word;
+  padding: 0 1rem;
+
+  anchor-name: --about-section;
+}
+
+#about-text {
+  /* column-count: 2; */
+  column-width: var(--content-width-column);
+  column-gap: var(--gap-2);
+  font-size: var(--font-mm);
 }
 
 #agenda {
   max-width: var(--content-width-prose);
   margin: auto;
-  padding: 1rem 0;
+  padding: 1rem;
 }
 
 .agenda-day {
-  margin: 1em;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
   font-size: var(--font-ml);
+  background-color: var(--ivory);
+  border-radius: 1rem
 }
 
 .event {
@@ -116,4 +172,7 @@ h2 {
 .event-text {
   font-size: var(--font-sm);
   margin: 0.5em 0;
+
+  text-align: justify;
+  text-justify: inter-word;
 }
