@@ -17,6 +17,7 @@ type RawEvent {
   RawEvent(
     summary: String,
     description: Option(String),
+    location: Option(String),
     start_time: Time,
     end_time: Time,
   )
@@ -26,6 +27,7 @@ type Event {
   Event(
     summary: String,
     description: Option(String),
+    location: Option(String),
     start_time: String,
     end_time: String,
   )
@@ -61,10 +63,11 @@ fn get_events() -> Effect(Msg) {
   let decoder =
     dynamic.field(
       "items",
-      dynamic.list(dynamic.decode4(
+      dynamic.list(dynamic.decode5(
         RawEvent,
         dynamic.field("summary", dynamic.string),
         dynamic.optional_field("description", dynamic.string),
+        dynamic.optional_field("location", dynamic.string),
         dynamic.field("start", decode_datetime),
         dynamic.field("end", decode_datetime),
       )),
@@ -99,7 +102,13 @@ fn process_event(raw_event: RawEvent) -> Event {
     raw_event.end_time
     |> birl.get_time_of_day
     |> birl.time_of_day_to_short_string
-  Event(raw_event.summary, raw_event.description, start_time, end_time)
+  Event(
+    raw_event.summary,
+    raw_event.description,
+    raw_event.location,
+    start_time,
+    end_time,
+  )
 }
 
 fn process_event_list(raw_events: List(RawEvent)) -> List(AgendaDay) {
@@ -137,7 +146,10 @@ fn view_event(event: Event) -> Element(Msg) {
         element.text(event.start_time),
       ]),
       html.div([attribute.class("event-loc")], [
-        element.text("location placeholder"),
+        element.text(case event.location {
+          Some(location) -> location
+          None -> ""
+        }),
       ]),
       html.div([attribute.class("event-end")], [element.text(event.end_time)]),
     ]),
