@@ -30,6 +30,7 @@ type Event {
     location: Option(String),
     start_time: String,
     end_time: String,
+    color_index: Int,
   )
 }
 
@@ -106,7 +107,8 @@ fn init(_flags) -> #(Model, Effect(Msg)) {
   #(Model(agenda: []), get_events())
 }
 
-fn format_date(raw_event: RawEvent) -> String {
+fn format_date(raw_event: #(RawEvent, Int)) -> String {
+  let raw_event = raw_event.0
   let day_of_week =
     raw_event.start_time
     |> birl.weekday
@@ -119,7 +121,9 @@ fn format_date(raw_event: RawEvent) -> String {
   //<> " " <> year
 }
 
-fn process_event(raw_event: RawEvent) -> Event {
+fn process_event(raw_event: #(RawEvent, Int)) -> Event {
+  let color_index = raw_event.1
+  let raw_event = raw_event.0
   let start_time =
     raw_event.start_time
     |> birl.get_time_of_day
@@ -134,12 +138,14 @@ fn process_event(raw_event: RawEvent) -> Event {
     raw_event.location,
     start_time,
     end_time,
+    color_index,
   )
 }
 
 fn process_event_list(raw_events: List(RawEvent)) -> List(AgendaDay) {
   raw_events
-  |> list.chunk(fn(raw_event) { birl.get_day(raw_event.start_time) })
+  |> list.zip(list.range(0, list.length(raw_events)))
+  |> list.chunk(fn(raw_event) { birl.get_day({ raw_event.0 }.start_time) })
   |> list.map(fn(raw_events) {
     let assert Ok(date) =
       list.first(raw_events)
@@ -164,27 +170,60 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   }
 }
 
+// const divider_colors = ["--salmon-pink", "--sky-blue"]
+const divider_colors = [
+  "--rainbow-1", "--rainbow-2", "--rainbow-3", "--rainbow-4", "--rainbow-5",
+  "--rainbow-6",
+]
+
 fn view_event(event: Event) -> Element(Msg) {
-  html.div([attribute.class("event")], [
-    html.div([attribute.class("event-header")], [
-      html.div([attribute.class("event-title")], [element.text(event.summary)]),
-      html.div([attribute.class("event-start")], [
-        element.text(event.start_time),
+  let assert Ok(divider_color) =
+    divider_colors
+    |> list.drop(event.color_index % list.length(divider_colors))
+    |> list.take(1)
+    |> list.first
+  html.details([attribute.class("event")], [
+    html.summary([attribute.class("event-header")], [
+      html.div([attribute.class("event-time")], [
+        html.div([attribute.class("event-start")], [
+          element.text(event.start_time),
+        ]),
+        html.div([attribute.class("event-end")], [element.text(event.end_time)]),
       ]),
-      html.div([attribute.class("event-loc")], [
-        element.text(case event.location {
-          Some(location) -> location
+      html.div(
+        [
+          attribute.class("event-header-divider"),
+          attribute.style([
+            #("background-color", "var(" <> divider_color <> ")"),
+          ]),
+        ],
+        [],
+      ),
+      html.div([attribute.class("event-short-info")], [
+        html.div([attribute.class("event-title")], [element.text(event.summary)]),
+        html.div([attribute.class("event-loc")], [
+          element.text(case event.location {
+            Some(location) -> location
+            None -> ""
+          }),
+        ]),
+      ]),
+    ]),
+    html.div(
+      [
+        attribute.class("event-text"),
+        // attribute.property("innerHTML", case event.description {
+      //   Some(description) -> description
+      //   None -> ""
+      // }),
+      ],
+      [
+        element.text(case event.description {
+          Some(description) -> description
           None -> ""
         }),
-      ]),
-      html.div([attribute.class("event-end")], [element.text(event.end_time)]),
-    ]),
-    html.div([attribute.class("event-text")], [
-      element.text(case event.description {
-        Some(description) -> description
-        None -> ""
-      }),
-    ]),
+      ],
+    ),
   ])
 }
 
@@ -193,6 +232,7 @@ fn view_event_day(event_day: AgendaDay) -> Element(Msg) {
     html.div([attribute.class("agenda-day-header")], [
       element.text(event_day.date),
     ]),
+    html.hr([]),
     html.div(
       [attribute.class("event-list")],
       list.map(event_day.events, view_event),

@@ -19,9 +19,26 @@
   /* --dark-purple: #320a28; */
   --palatinate: #661452;
 
+  --rainbow-1: #de324c;
+  --rainbow-2: #f4895f;
+  --rainbow-3: #f8e16f;
+  --rainbow-4: #95cf92;
+  --rainbow-5: #369acc;
+  --rainbow-6: #9656a2;
+
   --gap-1: 1rem;
   --gap-2: calc(var(--gap-1) * 2);
   --gap-4: calc(var(--gap-1) * 4);
+}
+
+@keyframes roll {
+  0% {
+    transform: rotate(0);
+    transform: scale(1.0);
+  }
+  100% {
+    transform: rotate(-1deg) scale(1.015);
+  }
 }
 
 html {
@@ -117,6 +134,9 @@ h2 {
   font-family: Athiti;
   font-size: var(--font-md);
 }
+.hero-btn:hover{
+  animation: roll 0.1s ease forwards;
+}
 
 #hero-transition {
   position: absolute;
@@ -151,19 +171,63 @@ h2 {
   font-size: var(--font-mm);
 }
 
+#agenda-transition {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  /* position-anchor: --anchor-hero; */
+  /* position-area: span-start; */
+  height: var(--gap-4);
+  width: 100%;
+  min-width: 35rem;
+
+  rotate: 180deg;
+}
+
 #agenda {
-  max-width: var(--content-width-prose);
-  margin: auto;
-  padding: 1rem;
+  /* max-width: var(--content-width-prose); */
+  /* margin: auto; */
+  padding: 5rem 1rem 1rem 1rem;
+
+  position: relative;
+  background-color: var(--salmon-pink);
+}
+
+#agenda > h2 {
+  color: var(--space-cadet);
 }
 
 .agenda-day {
+  max-width: var(--content-width-prose);
+  margin: 1rem auto;
+
   padding: 0.5rem 1rem;
-  margin: 1rem 0;
+  /* margin: 1rem 0; */
   font-size: var(--font-ml);
   background-color: var(--ivory);
   border-radius: 1rem
 }
+
+.agenda-day:hover {
+  animation: roll 0.1s ease forwards;
+  /* transform: rotate(-5deg); */
+}
+
+.agenda-day-header {
+  /* border-bottom: ; */
+}
+
+.agenda-day > hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid var(--space-cadet);
+    /* margin: 1em 0; */
+    margin: 0;
+    margin-top: 0.5rem;
+    padding: 0;
+  }
 
 .event {
   font-size: var(--font-md);
@@ -173,7 +237,25 @@ h2 {
 
 .event-header {
   display: grid;
-  grid-template-columns: 1fr 3em;
+  /* grid-template-columns: 1fr 3em; */
+  grid-template-columns: 2.5em 1.5em minmax(0, 1fr);
+  /* text-overflow: ellipsis; */
+  /* overflow: hidden; */
+  /* white-space: nowrap; */
+}
+
+.event-start {
+  text-align: right;
+}
+
+.event-end {
+  text-align: right;
+  color: gray;
+}
+
+.event-header-divider {
+  border-radius: 1rem;
+  margin: 0.25rem 0.5rem;
 }
 
 .event-title {
@@ -183,10 +265,6 @@ h2 {
   overflow: hidden;
 }
 
-.event-start {
-  text-align: right;
-}
-
 .event-loc {
   color: gray;
   text-overflow: ellipsis;
@@ -194,10 +272,6 @@ h2 {
   overflow: hidden;
 }
 
-.event-end {
-  text-align: right;
-  color: gray;
-}
 
 .event-text {
   font-size: var(--font-sm);
@@ -205,4 +279,6 @@ h2 {
 
   text-align: justify;
   text-justify: inter-word;
+
+  overflow-wrap: anywhere;
 }
