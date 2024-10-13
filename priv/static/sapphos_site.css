@@ -6,6 +6,9 @@
   --font-lg: 2rem;
   --font-xl: 3rem;
 
+  --font-title: Shrikhand, serif;
+  --font-body: Athiti, sans-serif;
+
   --content-width-xl: 70rem;
   --content-width: 45rem;
   --content-width-prose: 30rem;
@@ -46,7 +49,7 @@ html {
 }
 
 body {
-  font-family: Athiti, sans-serif;
+  font-family: var(--font-body);
   /* max-width: var(--content-width-xl); */
   background-color: var(--space-cadet);
   margin: auto;
@@ -55,7 +58,7 @@ body {
 
 h2 {
   margin: 1.5rem 0;
-  font-family: Shrikhand, serif;
+  font-family: var(--font-title);
   color: var(--salmon-pink);
   font-size: var(--font-xl);
   text-align: center;
@@ -65,7 +68,7 @@ h2 {
   /* background-color: var(--ivory); */
   background: url(/priv/static/hero_background_stars.svg), url(/priv/static/hero_background_layers.svg);
   background-size: cover;
-  padding: 5rem 0;
+  /* padding: 5rem 0; */
 
   anchor-name: --anchor-hero;
 
@@ -78,13 +81,46 @@ h2 {
   justify-content: center;
 }
 
+#navbar {
+  font-size: var(--font-ml);
+}
+
+#navbar-container {
+  max-width: var(--content-width);
+  margin: var(--gap-1) auto;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--gap-1);
+}
+
+.navbar-section {
+  display:flex;
+  gap: 0.5em;
+}
+
+.navbar-section > a {
+  text-decoration: none;
+  color: var(--space-cadet);
+  font-weight: bold;
+}
+
+.navbar-section > a > svg {
+  /* height: 100%; */
+  fill: var(--space-cadet);
+  max-height: 1em;
+  width: 1.25em;
+}
+
 #hero-container {
   max-width: var(--content-width);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: auto;
-  padding: 2rem;
+  padding: 5rem 2rem 7rem 2rem;
   gap: var(--gap-2);
 
 }
@@ -94,6 +130,11 @@ h2 {
     height: 95dvh;
     padding: 0;
   }
+
+  #navbar-container {
+    flex-direction: column;
+  }
+
   #hero-container {
     flex-direction: column;
     padding: 2rem 0;
@@ -106,7 +147,7 @@ h2 {
   /* justify-content: center; */
   /* align-items: center; */
   padding: 0 2rem;
-  font-family: Shrikhand;
+  font-family: var(--font-title);
   font-size: var(--font-xl);
   /* color: var(--palatinate); */
   color: var(--space-cadet);
@@ -131,7 +172,7 @@ h2 {
   border-radius: 1em;
   color: var(--ivory);
   background-color: var(--space-cadet);
-  font-family: Athiti;
+  font-family: var(--font-body);
   font-size: var(--font-md);
 }
 .hero-btn:hover{
@@ -150,7 +191,7 @@ h2 {
   min-width: 35rem;
 }
 
-#about {
+#about-section {
   max-width: var(--content-width);
   margin: var(--gap-4) auto;
   padding: 1rem 0;
@@ -185,7 +226,7 @@ h2 {
   rotate: 180deg;
 }
 
-#agenda {
+#agenda-section {
   /* max-width: var(--content-width-prose); */
   /* margin: auto; */
   padding: 5rem 1rem 1rem 1rem;
@@ -194,7 +235,7 @@ h2 {
   background-color: var(--salmon-pink);
 }
 
-#agenda > h2 {
+#agenda-section > h2 {
   color: var(--space-cadet);
 }
 
