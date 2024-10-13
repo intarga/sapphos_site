@@ -56,6 +56,10 @@ body {
   line-height: 1.25;
 }
 
+h1 {
+  margin: 0;
+}
+
 h2 {
   margin: 1.5rem 0;
   font-family: var(--font-title);
@@ -83,6 +87,12 @@ h2 {
 
 #navbar {
   font-size: var(--font-ml);
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
 }
 
 #navbar-container {
@@ -137,6 +147,7 @@ h2 {
   }
 
   #hero-container {
+    margin: 0;
     flex-direction: column;
     padding: 2rem 0;
   }
