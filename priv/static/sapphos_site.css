@@ -66,7 +66,7 @@ h2 {
 
 #hero {
   /* background-color: var(--ivory); */
-  background: url(/priv/static/hero_background_stars.svg), url(/priv/static/hero_background_layers.svg);
+  background: url(hero_background_stars.svg), url(hero_background_layers.svg);
   background-size: cover;
   /* padding: 5rem 0; */
 
@@ -127,7 +127,7 @@ h2 {
 /* @media screen and (max-width: var(--content-width)) { */
 @media screen and (max-width: 50rem) {
   #hero {
-    background: url(/priv/static/hero_background_stars_portrait.svg), url(/priv/static/hero_background_layers_portrait.svg);
+    background: url(hero_background_stars_portrait.svg), url(hero_background_layers_portrait.svg);
     height: 95dvh;
     padding: 0;
   }
