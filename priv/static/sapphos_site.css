@@ -127,6 +127,7 @@ h2 {
 /* @media screen and (max-width: var(--content-width)) { */
 @media screen and (max-width: 50rem) {
   #hero {
+    background: url(/priv/static/hero_background_stars_portrait.svg), url(/priv/static/hero_background_layers_portrait.svg);
     height: 95dvh;
     padding: 0;
   }
