@@ -1,0 +1,13 @@
+[Unit]
+Description=elk
+
+[Container]
+Image=ghcr.io/intarga/elk:main
+AutoUpdate=registry
+PublishPort=5314:5314/tcp
+UserNS=keep-id
+Volume=%h/elk-storage:/elk/data:Z
+
+[Install]
+# Start by default on boot
+WantedBy=default.target
