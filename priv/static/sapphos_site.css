@@ -218,8 +218,8 @@ h2 {
 
   color: var(--ivory);
 
-  text-align: justify;
-  text-justify: inter-word;
+  /* text-align: justify; */
+  /* text-justify: inter-word; */
   padding: 0 1rem;
 
   anchor-name: --about-section;
@@ -338,8 +338,8 @@ h2 {
   font-size: var(--font-sm);
   margin: 0.5em 0;
 
-  text-align: justify;
-  text-justify: inter-word;
+  /* text-align: justify; */
+  /* text-justify: inter-word; */
 
   overflow-wrap: anywhere;
 }
