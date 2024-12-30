@@ -58,11 +58,15 @@ body {
 
 h1 {
   margin: 0;
+  /* override user agents setting bold because Shrikhand is already bold enough */
+  font-weight: normal;
 }
 
 h2 {
   margin: 1.5rem 0;
   font-family: var(--font-title);
+  /* override user agents setting bold because Shrikhand is already bold enough */
+  font-weight: normal;
   color: var(--salmon-pink);
   font-size: var(--font-xl);
   text-align: center;
