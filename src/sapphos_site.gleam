@@ -30,16 +30,17 @@ type Event {
     location: Option(String),
     start_time: String,
     end_time: String,
+    day: String,
     color_index: Int,
   )
 }
 
-type AgendaDay {
-  AgendaDay(date: String, events: List(Event))
+type AgendaMonth {
+  AgendaMonth(month: String, events: List(Event))
 }
 
 type Agenda =
-  List(AgendaDay)
+  List(AgendaMonth)
 
 type Model {
   Model(agenda: Agenda)
@@ -107,18 +108,19 @@ fn init(_flags) -> #(Model, Effect(Msg)) {
   #(Model(agenda: []), get_events())
 }
 
-fn format_date(raw_event: #(RawEvent, Int)) -> String {
-  let raw_event = raw_event.0
+fn format_date(raw_event: RawEvent) -> String {
   let day_of_week =
     raw_event.start_time
     |> birl.weekday
-    |> birl.weekday_to_short_string
-    |> string.uppercase
+    |> birl.weekday_to_string
   let date = birl.get_day(raw_event.start_time).date |> int.to_string
-  let month = birl.short_string_month(raw_event.start_time) |> string.uppercase
-  // let year = birl.get_day(raw_event.start_time).year |> int.to_string
-  day_of_week <> " " <> date <> " " <> month
-  //<> " " <> year
+  let ordinal = case date {
+    "1" | "21" | "31" -> "st"
+    "2" | "22" -> "nd"
+    "3" | "23" -> "rd"
+    _ -> "th"
+  }
+  day_of_week <> " the " <> date <> ordinal
 }
 
 fn process_event(raw_event: #(RawEvent, Int)) -> Event {
@@ -132,28 +134,32 @@ fn process_event(raw_event: #(RawEvent, Int)) -> Event {
     raw_event.end_time
     |> birl.get_time_of_day
     |> birl.time_of_day_to_short_string
+  let date = format_date(raw_event)
   Event(
     raw_event.summary,
     raw_event.description,
     raw_event.location,
     start_time,
     end_time,
+    date,
     color_index,
   )
 }
 
-fn process_event_list(raw_events: List(RawEvent)) -> List(AgendaDay) {
+fn process_event_list(raw_events: List(RawEvent)) -> List(AgendaMonth) {
   raw_events
   |> list.zip(list.range(0, list.length(raw_events)))
-  |> list.chunk(fn(raw_event) { birl.get_day({ raw_event.0 }.start_time) })
+  |> list.chunk(fn(raw_event) { birl.month({ raw_event.0 }.start_time) })
   |> list.map(fn(raw_events) {
-    let assert Ok(date) =
+    let assert Ok(month) =
       list.first(raw_events)
-      |> result.map(format_date)
+      |> result.map(fn(raw_event) {
+        { raw_event.0 }.start_time |> birl.string_month
+      })
     let events =
       raw_events
       |> list.map(process_event)
-    AgendaDay(date, events)
+    AgendaMonth(month, events)
   })
 }
 
@@ -183,29 +189,34 @@ fn view_event(event: Event) -> Element(Msg) {
     |> list.take(1)
     |> list.first
   html.details([attribute.class("event")], [
-    html.summary([attribute.class("event-header")], [
-      html.div([attribute.class("event-time")], [
-        html.div([attribute.class("event-start")], [
-          element.text(event.start_time),
-        ]),
-        html.div([attribute.class("event-end")], [element.text(event.end_time)]),
-      ]),
-      html.div(
-        [
-          attribute.class("event-header-divider"),
-          attribute.style([
-            #("background-color", "var(" <> divider_color <> ")"),
+    html.summary([attribute.class("event-summary")], [
+      html.div([attribute.class("event-title")], [element.text(event.summary)]),
+      html.div([attribute.class("event-header")], [
+        html.div([attribute.class("event-time")], [
+          html.div([attribute.class("event-start")], [
+            element.text(event.start_time),
           ]),
-        ],
-        [],
-      ),
-      html.div([attribute.class("event-short-info")], [
-        html.div([attribute.class("event-title")], [element.text(event.summary)]),
-        html.div([attribute.class("event-loc")], [
-          element.text(case event.location {
-            Some(location) -> location
-            None -> ""
-          }),
+          html.div([attribute.class("event-end")], [
+            element.text(event.end_time),
+          ]),
+        ]),
+        html.div(
+          [
+            attribute.class("event-header-divider"),
+            attribute.style([
+              #("background-color", "var(" <> divider_color <> ")"),
+            ]),
+          ],
+          [],
+        ),
+        html.div([attribute.class("event-short-info")], [
+          html.div([attribute.class("event-day")], [element.text(event.day)]),
+          html.div([attribute.class("event-loc")], [
+            element.text(case event.location {
+              Some(location) -> location
+              None -> ""
+            }),
+          ]),
         ]),
       ]),
     ]),
@@ -227,21 +238,21 @@ fn view_event(event: Event) -> Element(Msg) {
   ])
 }
 
-fn view_event_day(event_day: AgendaDay) -> Element(Msg) {
+fn view_event_month(event_month: AgendaMonth) -> Element(Msg) {
   html.div([attribute.class("agenda-day")], [
     html.div([attribute.class("agenda-day-header")], [
-      element.text(event_day.date),
+      element.text(event_month.month),
     ]),
     html.hr([]),
     html.div(
       [attribute.class("event-list")],
-      list.map(event_day.events, view_event),
+      list.map(event_month.events, view_event),
     ),
   ])
 }
 
 fn view_agenda(calendar: Agenda) -> Element(Msg) {
-  html.div([attribute.class("agenda")], list.map(calendar, view_event_day))
+  html.div([attribute.class("agenda")], list.map(calendar, view_event_month))
 }
 
 fn view(model: Model) -> Element(Msg) {
