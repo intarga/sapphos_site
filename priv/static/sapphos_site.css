@@ -213,6 +213,10 @@ h2 {
   height: var(--gap-4);
   width: 100%;
   min-width: 35rem;
+
+  /* workaround for line artifact from layout bug in mobile safari */
+  margin-bottom: -1px;
+  padding-bottom: 1px;
 }
 
 #about-section {
