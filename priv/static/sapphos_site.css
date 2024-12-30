@@ -216,7 +216,6 @@ h2 {
 
   /* workaround for line artifact from layout bug in mobile safari */
   margin-bottom: -1px;
-  padding-bottom: 1px;
 }
 
 #about-section {
