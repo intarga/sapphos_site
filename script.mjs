@@ -31,6 +31,7 @@ const fetch_calendar = async () => {
 }
 
 const process_calendar = (raw_calendar) => {
+  // cut items from the API response down to a more manageable format
   const events = raw_calendar.items.map((item, i) => ({
     title: item.summary,
     description: (item.hasOwnProperty("description") ? item.description : ""),
@@ -40,6 +41,7 @@ const process_calendar = (raw_calendar) => {
     color_index: i,
   }));
 
+  // cluster the events by month
   let months = [];
   let current_month = {month: -1, events: []};
   for (const event of events) {
