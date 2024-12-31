@@ -56,7 +56,9 @@ const process_calendar = (raw_calendar) => {
 
     current_month.events.push(event);
   }
-  months.push(current_month);
+  if current_month.month !== -1 {
+    months.push(current_month);
+  }
 
   return months
 }
@@ -86,7 +88,6 @@ const render_agenda = (months) => {
     
     const header = document.createElement("div");
     header.className = "agenda-month-header";
-    // TODO: handle case where first event doesn't exist
     header.textContent = month_formatter.format(month.events[0].start);
 
     const hr = document.createElement("hr");
