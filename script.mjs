@@ -58,7 +58,7 @@ const process_calendar = (raw_calendar) => {
 
     current_month.events.push(event);
   }
-  if current_month.month !== -1 {
+  if (current_month.month !== -1) {
     months.push(current_month);
   }
 
