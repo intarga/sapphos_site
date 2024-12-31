@@ -78,7 +78,7 @@ h2 {
 
 #hero {
   /* background-color: var(--ivory); */
-  background: url(hero_background_stars.svg), url(hero_background_layers.svg);
+  background: url(images/hero_background_stars.svg), url(images/hero_background_layers.svg);
   background-size: cover;
   /* padding: 5rem 0; */
 
@@ -145,7 +145,7 @@ h2 {
 /* @media screen and (max-width: var(--content-width)) { */
 @media screen and (max-width: 50rem) {
   #hero {
-    background: url(hero_background_stars_portrait.svg), url(hero_background_layers_portrait.svg);
+    background: url(images/hero_background_stars_portrait.svg), url(images/hero_background_layers_portrait.svg);
     height: 95dvh;
     padding: 0;
   }
@@ -266,7 +266,7 @@ h2 {
   color: var(--space-cadet);
 }
 
-.agenda-day {
+.agenda-month {
   max-width: var(--content-width-prose);
   margin: 1rem auto;
 
@@ -277,16 +277,16 @@ h2 {
   border-radius: 1rem
 }
 
-.agenda-day:hover {
+.agenda-month:hover {
   animation: roll 0.1s ease forwards;
   /* transform: rotate(-5deg); */
 }
 
-.agenda-day-header {
+.agenda-month-header {
   /* border-bottom: ; */
 }
 
-.agenda-day > hr {
+.agenda-month > hr {
     display: block;
     height: 1px;
     border: 0;
