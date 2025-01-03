@@ -1,6 +1,5 @@
 use askama_axum::Template;
 use axum::{extract::State, routing::get, Router};
-use chrono::{DateTime, Utc};
 use std::sync::{Arc, RwLock};
 use tower_http::services::ServeDir;
 
@@ -46,6 +45,23 @@ async fn main() {
     let state = AppState {
         agenda: Arc::new(RwLock::new(gcal::fetch_calendar().await)),
     };
+
+    // Refresh the agenda in the background every 5 minutes
+    let background_agenda = state.agenda.clone();
+    tokio::task::spawn(async move {
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5 * 60));
+
+        loop {
+            interval.tick().await;
+            async {
+                // TODO: remove unwrap crimes
+                let new_agenda = gcal::fetch_calendar().await;
+                let mut agenda = background_agenda.write().unwrap();
+                *agenda = new_agenda;
+            }
+            .await;
+        }
+    });
 
     let app = Router::new()
         .route("/", get(home))

@@ -1,5 +1,5 @@
 use super::{Agenda, AgendaMonth, Event};
-use chrono::{DateTime, Datelike, NaiveDateTime, Utc};
+use chrono::{DateTime, Datelike, Utc};
 use chrono_tz::Europe::Oslo;
 use itertools::Itertools;
 use serde::{Deserialize, Deserializer};
@@ -26,8 +26,6 @@ impl<'de> Deserialize<'de> for TaggedEvent {
         #[derive(Deserialize)]
         struct RawTime {
             #[serde(rename = "dateTime")]
-            // date_time: NaiveDateTime,
-            // date_time: DateTime<chrono_tz::Tz>,
             date_time: DateTime<Utc>,
         }
 
