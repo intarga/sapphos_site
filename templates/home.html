@@ -114,7 +114,7 @@
                     </div>
                   </div>
                 </summary>
-                <div class="event-text">{{event.description}}</div>
+                <div class="event-text">{{event.description|escape("none")}}</div>
               </details>
             {% endfor %}
             </div>

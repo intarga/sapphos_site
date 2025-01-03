@@ -2,6 +2,7 @@ use super::{Agenda, AgendaMonth, Event};
 use chrono::{DateTime, Datelike, Utc};
 use chrono_tz::Europe::Oslo;
 use itertools::Itertools;
+use pulldown_cmark::Parser;
 use serde::{Deserialize, Deserializer};
 
 struct TaggedEvent {
@@ -34,6 +35,16 @@ impl<'de> Deserialize<'de> for TaggedEvent {
         let start = raw_event.start.date_time.with_timezone(&Oslo);
         let end = raw_event.end.date_time.with_timezone(&Oslo);
 
+        let description = raw_event
+            .description
+            .map(|d| {
+                let parser = Parser::new(&d);
+                let mut output = String::new();
+                pulldown_cmark::html::push_html(&mut output, parser);
+                output
+            })
+            .unwrap_or_else(|| "".to_string());
+
         let weekday = start.format("%A");
         let day_of_month = start.day();
         let ordinal = match day_of_month {
@@ -45,7 +56,7 @@ impl<'de> Deserialize<'de> for TaggedEvent {
         Ok(TaggedEvent {
             event: Event {
                 title: raw_event.summary,
-                description: raw_event.description.unwrap_or_else(|| String::from("")),
+                description,
                 location: raw_event.location.unwrap_or_else(|| String::from("")),
                 start_time: start.format("%R").to_string(),
                 end_time: end.format("%R").to_string(),
