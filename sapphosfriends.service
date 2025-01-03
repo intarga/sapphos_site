@@ -1,0 +1,12 @@
+[Unit]
+Description=Server for sapphosfriends.no
+After=network.target
+
+[Service]
+ExecStart=/home/intarga/sapphosfriends/target/release/sapphos_site
+WorkingDirectory=/home/intarga/sapphosfriends
+Type=exec
+Restart=always
+
+[Install]
+WantedBy=default.target
