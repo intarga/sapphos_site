@@ -218,24 +218,64 @@ h2 {
   margin-bottom: -1px;
 }
 
-#about-section {
+#announcements-section {
   max-width: var(--content-width);
   margin: var(--gap-4) auto;
   padding: 1rem 0;
 
-  color: var(--ivory);
+  /* color: var(--ivory); */
 
   /* text-align: justify; */
   /* text-justify: inter-word; */
   padding: 0 1rem;
 
-  anchor-name: --about-section;
+  anchor-name: --announcements-section;
 }
 
-#about-text {
-  /* column-count: 2; */
-  column-width: var(--content-width-column);
-  column-gap: var(--gap-2);
+.announcement {
+  max-width: var(--content-width-prose);
+  margin: 1rem auto;
+
+  padding: 0.5rem 1rem;
+  /* margin: 1rem 0; */
+  font-size: var(--font-md);
+  background-color: var(--ivory);
+  border-radius: 1rem
+}
+
+.announcement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.announcement-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25em;
+}
+
+.announcement-title > h3 {
+  margin: 0em;
+  font-size: var(--font-ml);
+}
+
+.announcement-title > svg {
+  /* height: 100%; */
+  /* fill: var(--space-cadet); */
+  max-height: 1em;
+  width: 1.25em;
+}
+
+.announcement-body {
+  /* todo */
+}
+
+.announcement-author {
+  text-align: right;
+  font-weight: bold;
   font-size: var(--font-mm);
 }
 
@@ -287,15 +327,15 @@ h2 {
 }
 
 .agenda-month > hr {
-    display: block;
-    height: 1px;
-    border: 0;
-    border-top: 1px solid var(--space-cadet);
-    /* margin: 1em 0; */
-    margin: 0;
-    margin-top: 0.5rem;
-    padding: 0;
-  }
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid var(--space-cadet);
+  /* margin: 1em 0; */
+  margin: 0;
+  margin-top: 0.5rem;
+  padding: 0;
+}
 
 .event {
   font-size: var(--font-md);
@@ -355,4 +395,25 @@ details summary::-webkit-details-marker,
 details summary::marker {
   display: none; 
   content: "";
+}
+
+#about-section {
+  max-width: var(--content-width);
+  margin: var(--gap-4) auto;
+  padding: 1rem 0;
+
+  color: var(--ivory);
+
+  /* text-align: justify; */
+  /* text-justify: inter-word; */
+  padding: 0 1rem;
+
+  anchor-name: --about-section;
+}
+
+#about-text {
+  /* column-count: 2; */
+  column-width: var(--content-width-column);
+  column-gap: var(--gap-2);
+  font-size: var(--font-mm);
 }
