@@ -108,7 +108,6 @@ pub async fn fetch_calendar() -> Result<Agenda> {
         .map(|group| {
             let (events, months): (Vec<(usize, Event)>, Vec<String>) = group
                 .1
-                .into_iter()
                 .map(|tagged| ((tagged.0, tagged.1.event), tagged.1.month))
                 .unzip();
             AgendaMonth {
