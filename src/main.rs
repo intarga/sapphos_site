@@ -3,7 +3,7 @@ use axum::{extract::State, routing::get, Router};
 use core::panic;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
-use tracing::error;
+use tracing::{error, info};
 
 mod gcal;
 
@@ -83,6 +83,7 @@ async fn main() {
                 }
             };
             *agenda = new_agenda;
+            info!("Successfully refreshed agenda");
         }
     });
 
