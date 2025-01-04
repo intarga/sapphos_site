@@ -3,8 +3,5 @@
 /build
 erl_crash.dump
 .DS_Store
-
-
-# Added by cargo
-
 /target
+*.sqlite3

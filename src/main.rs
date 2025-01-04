@@ -1,5 +1,12 @@
+use anyhow::anyhow;
 use askama_axum::Template;
-use axum::{extract::State, routing::get, Router};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    routing::get,
+    Router,
+};
 use core::panic;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
@@ -26,21 +33,67 @@ pub struct AgendaMonth {
 
 pub type Agenda = Vec<AgendaMonth>;
 
+struct Announcement {
+    title: String,
+    body: String,
+    author: String,
+}
+
 #[derive(Clone, Debug)]
 struct AppState {
     // TODO: should this contain the rendered template instead?
     agenda: Arc<RwLock<Agenda>>,
+    db_pool: deadpool_sqlite::Pool,
 }
 
 #[derive(Template)]
 #[template(path = "home.html")]
 struct HomeTemplate {
     agenda: Agenda,
+    announcements: Vec<Announcement>,
 }
 
-async fn home(State(state): State<AppState>) -> HomeTemplate {
+struct AppError(anyhow::Error);
+
+// TODO: make this a nice template
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Something went wrong: {}", self.0),
+        )
+            .into_response()
+    }
+}
+
+async fn home_inner(state: AppState) -> anyhow::Result<HomeTemplate> {
+    // TODO: deal with this unwrap?
     let agenda = state.agenda.read().unwrap().clone();
-    HomeTemplate { agenda }
+    let announcements = {
+        let conn = state.db_pool.get().await?;
+        // TODO: deal with this unwrap?
+        let conn = conn.lock().unwrap();
+        let mut stmt = conn.prepare_cached("SELECT title, body, author FROM announcements")?;
+        let announcements = stmt
+            .query_map([], |row| {
+                Ok(Announcement {
+                    title: row.get(0)?,
+                    body: row.get(1)?,
+                    author: row.get(2)?,
+                })
+            })?
+            .map(|res| res.map_err(|e| anyhow!(e)))
+            .collect::<Result<Vec<Announcement>, anyhow::Error>>()?;
+        announcements
+    };
+    Ok(HomeTemplate {
+        agenda,
+        announcements,
+    })
+}
+
+async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
+    home_inner(state).await.map_err(AppError)
 }
 
 #[tokio::main]
@@ -49,16 +102,32 @@ async fn main() {
         .with_max_level(tracing::Level::INFO)
         .init();
 
+    let db_schema = std::fs::read_to_string("db/schema.sql").expect("Failed to read db/schema.sql");
+    let deadpool_cfg = deadpool_sqlite::Config::new("db/db.sqlite3");
+    let db_pool = deadpool_cfg
+        .create_pool(deadpool_sqlite::Runtime::Tokio1)
+        .expect("Failed to create DB pool");
+    let conn = db_pool
+        .get()
+        .await
+        .expect("Failed to get a DB connection from the pool");
+    {
+        let conn = conn.lock().expect("Failed to acquire lock on DB conn");
+        conn.execute_batch(&db_schema)
+            .expect("Failed to execute DB schema");
+    }
+
     let agenda = match gcal::fetch_calendar().await {
         Ok(agenda) => agenda,
         Err(e) => {
             error!("Failed to initialise Agenda from GCal API: {}", e);
-            panic!("Cannot start server without initial state");
+            panic!("Cannot start server without initial agenda state");
         }
     };
 
     let state = AppState {
         agenda: Arc::new(RwLock::new(agenda)),
+        db_pool,
     };
 
     // Refresh the agenda in the background every 5 minutes

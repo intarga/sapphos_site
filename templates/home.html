@@ -74,20 +74,24 @@
           </div>
         </div>
         <img 
-          id="hero-transition" 
+          id="hero-announcements-transition" 
           src="/assets/images/hero_transition.svg" 
           alt="Solid color waves to act as a transition between sections"
         />
       </section>
-      <section id="about-section">
-        <h2 id="about">About us</h2>
-        <div id="about-text">
-          Sappho's Friends is a community for queer women, non-binary and trans people. Our core values include accessibility, inclusion and intersectional feminism.
-       </div>
+      <section id="announcements-section">
+        <h2 id="announcements">Announcements</h2>
+        {% for announcement in announcements %}
+        <div class="announcement">
+          <h3 class="announcement-title">{{announcement.title}}</h3>
+          <div class="announcement-body">{{announcement.body}}</div>
+          <div class="announcement-author">{{announcement.author}}</div>
+        </div>
+        {% endfor %}
       </section>
       <section id="agenda-section">
         <img 
-          id="agenda-transition" 
+          id="announcements-agenda-transition" 
           src="/assets/images/hero_transition.svg" 
           alt="Solid color waves to act as a transition between sections"
         />
@@ -121,6 +125,17 @@
           </div>
         {% endfor %}
         </div>
+        <img 
+          id="agenda-about-transition" 
+          src="/assets/images/hero_transition.svg" 
+          alt="Solid color waves to act as a transition between sections"
+        />
+      </section>
+      <section id="about-section">
+        <h2 id="about">About us</h2>
+        <div id="about-text">
+          Sappho's Friends is a community for queer women, non-binary and trans people. Our core values include accessibility, inclusion and intersectional feminism.
+       </div>
       </section>
     </main>
   </body>

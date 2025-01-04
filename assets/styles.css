@@ -203,7 +203,7 @@ h2 {
   animation: roll 0.1s ease forwards;
 }
 
-#hero-transition {
+#hero-announcements-transition, #agenda-about-transition {
   position: absolute;
   left: 0;
   right: 0;
@@ -239,7 +239,7 @@ h2 {
   font-size: var(--font-mm);
 }
 
-#agenda-transition {
+#announcements-agenda-transition {
   position: absolute;
   left: 0;
   right: 0;
@@ -256,7 +256,7 @@ h2 {
 #agenda-section {
   /* max-width: var(--content-width-prose); */
   /* margin: auto; */
-  padding: 5rem 1rem 1rem 1rem;
+  padding: 5rem 1rem;
 
   position: relative;
   background-color: var(--salmon-pink);
