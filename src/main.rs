@@ -1,7 +1,9 @@
 use askama_axum::Template;
 use axum::{extract::State, routing::get, Router};
+use core::panic;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
+use tracing::error;
 
 mod gcal;
 
@@ -26,6 +28,7 @@ pub type Agenda = Vec<AgendaMonth>;
 
 #[derive(Clone, Debug)]
 struct AppState {
+    // TODO: should this contain the rendered template instead?
     agenda: Arc<RwLock<Agenda>>,
 }
 
@@ -42,8 +45,20 @@ async fn home(State(state): State<AppState>) -> HomeTemplate {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    let agenda = match gcal::fetch_calendar().await {
+        Ok(agenda) => agenda,
+        Err(e) => {
+            error!("Failed to initialise Agenda from GCal API: {}", e);
+            panic!("Cannot start server without initial state");
+        }
+    };
+
     let state = AppState {
-        agenda: Arc::new(RwLock::new(gcal::fetch_calendar().await)),
+        agenda: Arc::new(RwLock::new(agenda)),
     };
 
     // Refresh the agenda in the background every 5 minutes
@@ -51,15 +66,23 @@ async fn main() {
     tokio::task::spawn(async move {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5 * 60));
 
-        loop {
+        'refresh: loop {
             interval.tick().await;
-            async {
-                // TODO: remove unwrap crimes
-                let new_agenda = gcal::fetch_calendar().await;
-                let mut agenda = background_agenda.write().unwrap();
-                *agenda = new_agenda;
-            }
-            .await;
+            let new_agenda = match gcal::fetch_calendar().await {
+                Ok(agenda) => agenda,
+                Err(e) => {
+                    error!("Failed to refresh Agenda from GCal API: {}", e);
+                    continue 'refresh;
+                }
+            };
+            let mut agenda = match background_agenda.write() {
+                Ok(lock) => lock,
+                Err(e) => {
+                    error!("Failed to acquire lock on background state: {}", e);
+                    continue 'refresh;
+                }
+            };
+            *agenda = new_agenda;
         }
     });
 
@@ -70,6 +93,10 @@ async fn main() {
         .layer(CompressionLayer::new());
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+        .await
+        .expect("failed to bind port");
+    axum::serve(listener, app)
+        .await
+        .expect("failed to serve app");
 }

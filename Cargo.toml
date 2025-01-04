@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.95"
 askama = "0.12.1"
 askama_axum = "0.4.0"
 axum = "0.7"
@@ -16,3 +17,5 @@ serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
 tower-http = { version = "0.6.2", features = ["fs", "compression-full"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"

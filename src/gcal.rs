@@ -1,4 +1,5 @@
 use super::{Agenda, AgendaMonth, Event};
+use anyhow::{anyhow, Result};
 use chrono::{DateTime, Datelike, Utc};
 use chrono_tz::Europe::Oslo;
 use itertools::Itertools;
@@ -67,7 +68,7 @@ impl<'de> Deserialize<'de> for TaggedEvent {
     }
 }
 
-pub async fn fetch_calendar() -> Agenda {
+pub async fn fetch_calendar() -> Result<Agenda> {
     let client = reqwest::Client::new();
 
     let calendar_id =
@@ -88,20 +89,18 @@ pub async fn fetch_calendar() -> Agenda {
             ("timeMin", &time_min.to_rfc3339()),
         ])
         .send()
-        .await
-        // TODO: remove
-        .unwrap()
+        .await?
         .json()
-        .await
-        // TODO: remove
-        .unwrap();
+        .await?;
 
-    // TODO: remove unwraps
-    let events: Vec<TaggedEvent> =
-        serde_json::from_value(resp.get_mut("items").unwrap().take()).unwrap();
+    let events: Vec<TaggedEvent> = serde_json::from_value(
+        resp.get_mut("items")
+            .ok_or_else(|| anyhow!("GCal JSON resonse did not contain key \"items\""))?
+            .take(),
+    )?;
 
     // FIXME: this is crimes
-    events
+    Ok(events
         .into_iter()
         .enumerate()
         .chunk_by(|x| x.1.month.clone())
@@ -117,5 +116,5 @@ pub async fn fetch_calendar() -> Agenda {
                 events,
             }
         })
-        .collect()
+        .collect())
 }
