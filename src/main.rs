@@ -1,7 +1,7 @@
 use askama_axum::Template;
 use axum::{extract::State, routing::get, Router};
 use std::sync::{Arc, RwLock};
-use tower_http::services::ServeDir;
+use tower_http::{compression::CompressionLayer, services::ServeDir};
 
 mod gcal;
 
@@ -66,7 +66,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(home))
         .with_state(state)
-        .nest_service("/assets", ServeDir::new("assets"));
+        .nest_service("/assets", ServeDir::new("assets"))
+        .layer(CompressionLayer::new());
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
