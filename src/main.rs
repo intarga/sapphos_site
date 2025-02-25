@@ -3,11 +3,13 @@ use askama_axum::Template;
 use axum::{
     extract::State,
     http::StatusCode,
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
     routing::get,
-    Router,
+    Form, Router,
 };
+use chrono::NaiveDate;
 use core::panic;
+use serde::Deserialize;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
 use tracing::{error, info};
@@ -33,9 +35,11 @@ pub struct AgendaMonth {
 
 pub type Agenda = Vec<AgendaMonth>;
 
+#[derive(Clone, Debug, Deserialize)]
 struct Announcement {
     title: String,
     body: String,
+    date: NaiveDate,
     author: String,
 }
 
@@ -52,6 +56,10 @@ struct HomeTemplate {
     agenda: Agenda,
     announcements: Vec<Announcement>,
 }
+
+#[derive(Template)]
+#[template(path = "new_announcement.html")]
+struct NewAnnouncementTemplate {}
 
 struct AppError(anyhow::Error);
 
@@ -73,13 +81,15 @@ async fn home_inner(state: AppState) -> anyhow::Result<HomeTemplate> {
         let conn = state.db_pool.get().await?;
         // TODO: deal with this unwrap?
         let conn = conn.lock().unwrap();
-        let mut stmt = conn.prepare_cached("SELECT title, body, author FROM announcements")?;
+        let mut stmt =
+            conn.prepare_cached("SELECT title, body, date, author FROM announcements")?;
         let announcements = stmt
             .query_map([], |row| {
                 Ok(Announcement {
                     title: row.get(0)?,
                     body: row.get(1)?,
-                    author: row.get(2)?,
+                    date: row.get(2)?,
+                    author: row.get(3)?,
                 })
             })?
             .map(|res| res.map_err(|e| anyhow!(e)))
@@ -94,6 +104,43 @@ async fn home_inner(state: AppState) -> anyhow::Result<HomeTemplate> {
 
 async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
     home_inner(state).await.map_err(AppError)
+}
+
+async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
+    Ok(NewAnnouncementTemplate {})
+}
+
+async fn post_new_announcement_inner(
+    state: AppState,
+    announcement: Announcement,
+) -> anyhow::Result<()> {
+    let conn = state.db_pool.get().await?;
+    // TODO: deal with this unwrap?
+    let conn = conn.lock().unwrap();
+    let mut stmt = conn.prepare_cached(
+        "INSERT INTO announcements (title, body, date, author) VALUES ($1, $2, $3, $4)",
+    )?;
+    stmt.execute(rusqlite::params![
+        announcement.title,
+        announcement.body,
+        announcement.date,
+        announcement.author,
+    ])?;
+
+    Ok(())
+}
+
+async fn post_new_announcement(
+    State(state): State<AppState>,
+    Form(announcement): Form<Announcement>,
+) -> Result<Redirect, AppError> {
+    post_new_announcement_inner(state, announcement)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should redirect to admin page?
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/"))
 }
 
 #[tokio::main]
@@ -158,6 +205,10 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(home))
+        .route(
+            "/new_announcement",
+            get(get_new_announcement).post(post_new_announcement),
+        )
         .with_state(state)
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(CompressionLayer::new());

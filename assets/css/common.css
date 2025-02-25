@@ -1,0 +1,134 @@
+:root {
+  --font-sm: 0.9rem;
+  --font-md: 1rem;
+  --font-mm: 1.25rem;
+  --font-ml: 1.5rem;
+  --font-lg: 2rem;
+  --font-xl: 3rem;
+
+  --font-title: Shrikhand, serif;
+  --font-body: Athiti, sans-serif;
+
+  --content-width-xl: 70rem;
+  --content-width: 45rem;
+  --content-width-prose: 30rem;
+  --content-width-column: 20rem;
+
+  --sky-blue: #71c3d6;
+  --ivory: #fffceb;
+  --salmon-pink: #f7a1ad/*#f48292*/;
+  --space-cadet: #30354b;
+  --jade: #5da271;
+  /* --dark-purple: #320a28; */
+  --palatinate: #661452;
+
+  --rainbow-1: #de324c;
+  --rainbow-2: #f4895f;
+  --rainbow-3: #f8e16f;
+  --rainbow-4: #95cf92;
+  --rainbow-5: #369acc;
+  --rainbow-6: #9656a2;
+
+  --gap-1: 1rem;
+  --gap-2: calc(var(--gap-1) * 2);
+  --gap-4: calc(var(--gap-1) * 4);
+}
+
+@keyframes roll {
+  0% {
+    transform: rotate(0);
+    transform: scale(1.0);
+  }
+  100% {
+    transform: rotate(-1deg) scale(1.015);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  /* max-width: var(--content-width-xl); */
+  background-color: var(--space-cadet);
+  color: var(--ivory);
+  margin: auto;
+  line-height: 1.25;
+}
+
+main {
+  overflow: hidden;
+}
+
+h1 {
+  margin: 0;
+  /* override user agents setting bold because Shrikhand is already bold enough */
+  font-weight: normal;
+  font-family: var(--font-title);
+  font-size: var(--font-xl);
+}
+
+h2 {
+  margin: 1.5rem 0;
+  font-family: var(--font-title);
+  /* override user agents setting bold because Shrikhand is already bold enough */
+  font-weight: normal;
+  color: var(--salmon-pink);
+  font-size: var(--font-xl);
+  text-align: center;
+}
+
+button {
+  border: none;
+  padding: 0.25em 0.75em;
+  border-radius: 1em;
+  font-family: var(--font-body);
+  font-size: var(--font-md);
+}
+
+#navbar {
+  font-size: var(--font-ml);
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+}
+
+#navbar-container {
+  max-width: var(--content-width);
+  margin: var(--gap-1) auto;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--gap-1);
+}
+
+.navbar-section {
+  display:flex;
+  gap: 0.5em;
+}
+
+.navbar-section > a {
+  text-decoration: none;
+  color: var(--space-cadet);
+  font-weight: bold;
+}
+
+.navbar-section > a > svg {
+  /* height: 100%; */
+  fill: var(--space-cadet);
+  max-height: 1em;
+  width: 1.25em;
+}
+
+/* @media screen and (max-width: var(--content-width)) { */
+@media screen and (max-width: 50rem) {
+  #navbar-container {
+    flex-direction: column;
+  }
+}

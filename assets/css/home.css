@@ -1,80 +1,4 @@
-:root {
-  --font-sm: 0.9rem;
-  --font-md: 1rem;
-  --font-mm: 1.25rem;
-  --font-ml: 1.5rem;
-  --font-lg: 2rem;
-  --font-xl: 3rem;
-
-  --font-title: Shrikhand, serif;
-  --font-body: Athiti, sans-serif;
-
-  --content-width-xl: 70rem;
-  --content-width: 45rem;
-  --content-width-prose: 30rem;
-  --content-width-column: 20rem;
-
-  --sky-blue: #71c3d6;
-  --ivory: #fffceb;
-  --salmon-pink: #f7a1ad/*#f48292*/;
-  --space-cadet: #30354b;
-  --jade: #5da271;
-  /* --dark-purple: #320a28; */
-  --palatinate: #661452;
-
-  --rainbow-1: #de324c;
-  --rainbow-2: #f4895f;
-  --rainbow-3: #f8e16f;
-  --rainbow-4: #95cf92;
-  --rainbow-5: #369acc;
-  --rainbow-6: #9656a2;
-
-  --gap-1: 1rem;
-  --gap-2: calc(var(--gap-1) * 2);
-  --gap-4: calc(var(--gap-1) * 4);
-}
-
-@keyframes roll {
-  0% {
-    transform: rotate(0);
-    transform: scale(1.0);
-  }
-  100% {
-    transform: rotate(-1deg) scale(1.015);
-  }
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: var(--font-body);
-  /* max-width: var(--content-width-xl); */
-  background-color: var(--space-cadet);
-  margin: auto;
-  line-height: 1.25;
-}
-
-main {
-  overflow: hidden;
-}
-
-h1 {
-  margin: 0;
-  /* override user agents setting bold because Shrikhand is already bold enough */
-  font-weight: normal;
-}
-
-h2 {
-  margin: 1.5rem 0;
-  font-family: var(--font-title);
-  /* override user agents setting bold because Shrikhand is already bold enough */
-  font-weight: normal;
-  color: var(--salmon-pink);
-  font-size: var(--font-xl);
-  text-align: center;
-}
+@import url(/assets/css/common.css);
 
 #hero {
   /* background-color: var(--ivory); */
@@ -93,45 +17,6 @@ h2 {
   justify-content: center;
 }
 
-#navbar {
-  font-size: var(--font-ml);
-
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  width: 100%;
-}
-
-#navbar-container {
-  max-width: var(--content-width);
-  margin: var(--gap-1) auto;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--gap-1);
-}
-
-.navbar-section {
-  display:flex;
-  gap: 0.5em;
-}
-
-.navbar-section > a {
-  text-decoration: none;
-  color: var(--space-cadet);
-  font-weight: bold;
-}
-
-.navbar-section > a > svg {
-  /* height: 100%; */
-  fill: var(--space-cadet);
-  max-height: 1em;
-  width: 1.25em;
-}
-
 #hero-container {
   max-width: var(--content-width);
   display: flex;
@@ -141,17 +26,15 @@ h2 {
   padding: 5rem 2rem 7rem 2rem;
   gap: var(--gap-2);
 
+  color: var(--space-cadet);
 }
+
 /* @media screen and (max-width: var(--content-width)) { */
 @media screen and (max-width: 50rem) {
   #hero {
     background: url(/assets/images/hero_background_stars_portrait.svg), url(/assets/images/hero_background_layers_portrait.svg);
     height: 95dvh;
     padding: 0;
-  }
-
-  #navbar-container {
-    flex-direction: column;
   }
 
   #hero-container {
@@ -173,10 +56,6 @@ h2 {
   color: var(--space-cadet);
 }
 
-#hero-left > h1 {
-  font-size: var(--font-xl);
-}
-
 #hero-right-content {
   /* position: relative; */
   /* top: 50%; */
@@ -191,13 +70,8 @@ h2 {
 
 .hero-btn {
   /* margin-top: 1em; */
-  border: none;
-  padding: 0.25em 0.75em;
-  border-radius: 1em;
   color: var(--ivory);
   background-color: var(--space-cadet);
-  font-family: var(--font-body);
-  font-size: var(--font-md);
 }
 .hero-btn:hover{
   animation: roll 0.1s ease forwards;
@@ -223,7 +97,7 @@ h2 {
   margin: var(--gap-4) auto;
   padding: 1rem 0;
 
-  /* color: var(--ivory); */
+  color: var(--space-cadet);
 
   /* text-align: justify; */
   /* text-justify: inter-word; */
@@ -300,6 +174,8 @@ h2 {
 
   position: relative;
   background-color: var(--salmon-pink);
+
+  color: var(--space-cadet);
 }
 
 #agenda-section > h2 {
@@ -379,7 +255,6 @@ h2 {
   white-space: nowrap;
   overflow: hidden;
 }
-
 
 .event-text {
   font-size: var(--font-sm);
