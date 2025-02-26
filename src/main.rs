@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use askama_axum::Template;
 use axum::{
     extract::State,
@@ -7,12 +6,13 @@ use axum::{
     routing::get,
     Form, Router,
 };
-use chrono::NaiveDate;
 use core::panic;
-use serde::Deserialize;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
 use tracing::error;
+
+mod announcements;
+use announcements::{AdminAnnouncement, Announcement};
 
 mod gcal;
 
@@ -34,21 +34,6 @@ pub struct AgendaMonth {
 }
 
 pub type Agenda = Vec<AgendaMonth>;
-
-#[derive(Clone, Debug, Deserialize)]
-struct Announcement {
-    title: String,
-    body: String,
-    date: NaiveDate,
-    author: String,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-struct AdminAnnouncement {
-    id: i32,
-    title: String,
-    date: NaiveDate,
-}
 
 #[derive(Clone, Debug)]
 struct AppState {
@@ -88,92 +73,36 @@ impl IntoResponse for AppError {
     }
 }
 
-async fn home_inner(state: AppState) -> anyhow::Result<HomeTemplate> {
+async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
     // TODO: deal with this unwrap?
     let agenda = state.agenda.read().unwrap().clone();
-    let announcements = {
-        let conn = state.db_pool.get().await?;
-        // TODO: deal with this unwrap?
-        let conn = conn.lock().unwrap();
-        let mut stmt =
-            conn.prepare_cached("SELECT title, body, date, author FROM announcements")?;
-        let announcements = stmt
-            .query_map([], |row| {
-                Ok(Announcement {
-                    title: row.get(0)?,
-                    body: row.get(1)?,
-                    date: row.get(2)?,
-                    author: row.get(3)?,
-                })
-            })?
-            .map(|res| res.map_err(|e| anyhow!(e)))
-            .collect::<Result<Vec<Announcement>, anyhow::Error>>()?;
-        announcements
-    };
+    let announcements = announcements::select_announcements(state.db_pool)
+        .await
+        .map_err(AppError)?;
+
     Ok(HomeTemplate {
         agenda,
         announcements,
     })
 }
 
-async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
-    home_inner(state).await.map_err(AppError)
-}
-
-async fn admin_inner(state: AppState) -> anyhow::Result<AdminTemplate> {
-    let announcements = {
-        let conn = state.db_pool.get().await?;
-        // TODO: deal with this unwrap?
-        let conn = conn.lock().unwrap();
-        let mut stmt = conn.prepare_cached("SELECT id, title, date FROM announcements")?;
-        let announcements = stmt
-            .query_map([], |row| {
-                Ok(AdminAnnouncement {
-                    id: row.get(0)?,
-                    title: row.get(1)?,
-                    date: row.get(2)?,
-                })
-            })?
-            .map(|res| res.map_err(|e| anyhow!(e)))
-            .collect::<Result<Vec<AdminAnnouncement>, anyhow::Error>>()?;
-        announcements
-    };
-    Ok(AdminTemplate { announcements })
-}
-
 async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError> {
-    admin_inner(state).await.map_err(AppError)
+    let announcements = announcements::select_admin_announcements(state.db_pool)
+        .await
+        .map_err(AppError)?;
+
+    Ok(AdminTemplate { announcements })
 }
 
 async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
     Ok(NewAnnouncementTemplate {})
 }
 
-async fn post_new_announcement_inner(
-    state: AppState,
-    announcement: Announcement,
-) -> anyhow::Result<()> {
-    let conn = state.db_pool.get().await?;
-    // TODO: deal with this unwrap?
-    let conn = conn.lock().unwrap();
-    let mut stmt = conn.prepare_cached(
-        "INSERT INTO announcements (title, body, date, author) VALUES ($1, $2, $3, $4)",
-    )?;
-    stmt.execute(rusqlite::params![
-        announcement.title,
-        announcement.body,
-        announcement.date,
-        announcement.author,
-    ])?;
-
-    Ok(())
-}
-
 async fn post_new_announcement(
     State(state): State<AppState>,
     Form(announcement): Form<Announcement>,
 ) -> Result<Redirect, AppError> {
-    post_new_announcement_inner(state, announcement)
+    announcements::insert_announcement(state.db_pool, announcement)
         .await
         .map_err(AppError)?;
 
