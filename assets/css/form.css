@@ -64,6 +64,7 @@ form textarea {
 
 form button {
   font-weight: bold;
+  font-size: var(--font-mm);
   border: 0.1em solid;
   padding: 0em 0.5em;
   color: var(--ivory);
