@@ -12,7 +12,7 @@ use core::panic;
 use serde::Deserialize;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
-use tracing::{error, info};
+use tracing::error;
 
 mod gcal;
 
@@ -217,29 +217,10 @@ async fn main() {
 
     // Refresh the agenda in the background every 5 minutes
     let background_agenda = state.agenda.clone();
-    tokio::task::spawn(async move {
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5 * 60));
-
-        'refresh: loop {
-            interval.tick().await;
-            let new_agenda = match gcal::fetch_calendar().await {
-                Ok(agenda) => agenda,
-                Err(e) => {
-                    error!("Failed to refresh Agenda from GCal API: {}", e);
-                    continue 'refresh;
-                }
-            };
-            let mut agenda = match background_agenda.write() {
-                Ok(lock) => lock,
-                Err(e) => {
-                    error!("Failed to acquire lock on background state: {}", e);
-                    continue 'refresh;
-                }
-            };
-            *agenda = new_agenda;
-            info!("Successfully refreshed agenda");
-        }
-    });
+    tokio::task::spawn(gcal::refresh_agenda_at_interval(
+        background_agenda,
+        tokio::time::interval(tokio::time::Duration::from_secs(5 * 60)),
+    ));
 
     let app = Router::new()
         .route("/", get(home))

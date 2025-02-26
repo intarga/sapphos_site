@@ -5,6 +5,8 @@ use chrono_tz::Europe::Oslo;
 use itertools::Itertools;
 use pulldown_cmark::Parser;
 use serde::{Deserialize, Deserializer};
+use std::sync::{Arc, RwLock};
+use tracing::{error, info};
 
 struct TaggedEvent {
     event: Event,
@@ -116,4 +118,29 @@ pub async fn fetch_calendar() -> Result<Agenda> {
             }
         })
         .collect())
+}
+
+pub async fn refresh_agenda_at_interval(
+    background_agenda: Arc<RwLock<Vec<AgendaMonth>>>,
+    mut interval: tokio::time::Interval,
+) {
+    'refresh: loop {
+        interval.tick().await;
+        let new_agenda = match fetch_calendar().await {
+            Ok(agenda) => agenda,
+            Err(e) => {
+                error!("Failed to refresh Agenda from GCal API: {}", e);
+                continue 'refresh;
+            }
+        };
+        let mut agenda = match background_agenda.write() {
+            Ok(lock) => lock,
+            Err(e) => {
+                error!("Failed to acquire lock on background state: {}", e);
+                continue 'refresh;
+            }
+        };
+        *agenda = new_agenda;
+        info!("Successfully refreshed agenda");
+    }
 }
