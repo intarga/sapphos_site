@@ -43,6 +43,13 @@ struct Announcement {
     author: String,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+struct AdminAnnouncement {
+    id: i32,
+    title: String,
+    date: NaiveDate,
+}
+
 #[derive(Clone, Debug)]
 struct AppState {
     // TODO: should this contain the rendered template instead?
@@ -55,6 +62,13 @@ struct AppState {
 struct HomeTemplate {
     agenda: Agenda,
     announcements: Vec<Announcement>,
+}
+
+#[derive(Template)]
+#[template(path = "admin.html")]
+struct AdminTemplate {
+    // agenda: Agenda,
+    announcements: Vec<AdminAnnouncement>,
 }
 
 #[derive(Template)]
@@ -106,6 +120,31 @@ async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
     home_inner(state).await.map_err(AppError)
 }
 
+async fn admin_inner(state: AppState) -> anyhow::Result<AdminTemplate> {
+    let announcements = {
+        let conn = state.db_pool.get().await?;
+        // TODO: deal with this unwrap?
+        let conn = conn.lock().unwrap();
+        let mut stmt = conn.prepare_cached("SELECT id, title, date FROM announcements")?;
+        let announcements = stmt
+            .query_map([], |row| {
+                Ok(AdminAnnouncement {
+                    id: row.get(0)?,
+                    title: row.get(1)?,
+                    date: row.get(2)?,
+                })
+            })?
+            .map(|res| res.map_err(|e| anyhow!(e)))
+            .collect::<Result<Vec<AdminAnnouncement>, anyhow::Error>>()?;
+        announcements
+    };
+    Ok(AdminTemplate { announcements })
+}
+
+async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError> {
+    admin_inner(state).await.map_err(AppError)
+}
+
 async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
     Ok(NewAnnouncementTemplate {})
 }
@@ -138,9 +177,8 @@ async fn post_new_announcement(
         .await
         .map_err(AppError)?;
 
-    // TODO: should redirect to admin page?
     // TODO: should indicate success somehow?
-    Ok(Redirect::to("/"))
+    Ok(Redirect::to("/admin"))
 }
 
 #[tokio::main]
@@ -205,6 +243,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(home))
+        .route("/admin", get(admin))
         .route(
             "/new_announcement",
             get(get_new_announcement).post(post_new_announcement),

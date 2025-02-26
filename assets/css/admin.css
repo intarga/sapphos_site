@@ -1,0 +1,93 @@
+@import url(/assets/css/common.css);
+
+div.admin-panel {
+  max-width: var(--content-width);
+  min-height: 100dvh;
+
+  /* horizontally center the panel on the page */
+  margin: auto;
+  
+  display: flex;
+  /* panes form a vertical column */
+  flex-direction: column;
+  /* vertically center panel panes */
+  justify-content: center;
+  /* allow panes to fill available width */
+  align-items: stretch;
+  gap: 0.5em;
+}
+
+div.admin-panel h1 {
+  text-align: center;
+  color: var(--salmon-pink);
+}
+
+div.admin-panel h2 {
+  color: var(--space-cadet);
+  font-size: var(--font-lg);
+}
+
+.admin-announcements-list, .admin-events-list {
+  background-color: var(--ivory);
+  color: var(--space-cadet);
+
+  border-radius: 1rem;
+  padding: 0.5rem 1rem 1.5rem 1rem;
+
+  display: flex;
+  /* items form a vertical column */
+  flex-direction: column;
+  /* vertically center items */
+  justify-content: center;
+  /* allow items to fill available width */
+  align-items: stretch;
+  gap: 0.5em;
+}
+
+.admin-announcement, .admin-event {
+  display: flex;
+  /* push items to edges of flexbox */
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5em;
+}
+
+.admin-announcement-info, .admin-event-info {
+  font-size: var(--font-mdm);
+}
+
+.admin-panel hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  /* TODO: should probably match this to the colourscheme and make a var */
+  border-top: 1px solid #aaaaaa;
+  margin: 0.5rem;
+  padding: 0;
+}
+
+.button {
+  /* remove underline */
+  text-decoration: none;
+  font-weight: bold;
+  font-size: var(--font-md);
+
+  border: 0.1em solid;
+  border-radius: 1em;
+  padding: 0em 0.5em;
+  margin: 0em 0.1em;
+
+  color: var(--space-cadet);
+  background-color: var(--ivory);
+  border-color: var(--space-cadet);
+}
+
+.new-button {
+  align-self: flex-start;
+  padding: 0.25em 0.5em;
+}
+
+.delete-button {
+  color: var(--rainbow-1);
+  border-color: var(--rainbow-1);
+}

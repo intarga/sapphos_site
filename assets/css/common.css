@@ -1,6 +1,8 @@
 :root {
+  /* TODO: improve font size naming */
   --font-sm: 0.9rem;
   --font-md: 1rem;
+  --font-mdm: 1.1rem;
   --font-mm: 1.25rem;
   --font-ml: 1.5rem;
   --font-lg: 2rem;
