@@ -1,12 +1,13 @@
 use askama_axum::Template;
 use axum::{
-    extract::State,
+    extract::{Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
     routing::get,
     Form, Router,
 };
 use core::panic;
+use serde::Deserialize;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
 use tracing::error;
@@ -42,6 +43,11 @@ struct AppState {
     db_pool: deadpool_sqlite::Pool,
 }
 
+#[derive(Deserialize)]
+struct IdQuery {
+    id: i32,
+}
+
 #[derive(Template)]
 #[template(path = "home.html")]
 struct HomeTemplate {
@@ -59,6 +65,13 @@ struct AdminTemplate {
 #[derive(Template)]
 #[template(path = "new_announcement.html")]
 struct NewAnnouncementTemplate {}
+
+#[derive(Template)]
+#[template(path = "edit_announcement.html")]
+struct EditAnnouncementTemplate {
+    id: i32,
+    announcement: Announcement,
+}
 
 struct AppError(anyhow::Error);
 
@@ -103,6 +116,45 @@ async fn post_new_announcement(
     Form(announcement): Form<Announcement>,
 ) -> Result<Redirect, AppError> {
     announcements::insert_announcement(state.db_pool, announcement)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
+async fn get_edit_announcement(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+) -> Result<EditAnnouncementTemplate, AppError> {
+    let announcement = announcements::select_announcement(state.db_pool, query.id)
+        .await
+        .map_err(AppError)?;
+
+    Ok(EditAnnouncementTemplate {
+        id: query.id,
+        announcement,
+    })
+}
+
+async fn post_edit_announcement(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+    Form(announcement): Form<Announcement>,
+) -> Result<Redirect, AppError> {
+    announcements::update_announcement(state.db_pool, query.id, announcement)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
+async fn delete_announcement(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+) -> Result<Redirect, AppError> {
+    announcements::delete_announcement(state.db_pool, query.id)
         .await
         .map_err(AppError)?;
 
@@ -158,6 +210,11 @@ async fn main() {
             "/new_announcement",
             get(get_new_announcement).post(post_new_announcement),
         )
+        .route(
+            "/edit_announcement",
+            get(get_edit_announcement).post(post_edit_announcement),
+        )
+        .route("/delete_announcement", get(delete_announcement))
         .with_state(state)
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(CompressionLayer::new());

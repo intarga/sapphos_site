@@ -17,6 +17,27 @@ pub struct AdminAnnouncement {
     pub date: NaiveDate,
 }
 
+pub async fn select_announcement(
+    db_pool: deadpool_sqlite::Pool,
+    id: i32,
+) -> anyhow::Result<Announcement> {
+    let conn = db_pool.get().await?;
+    // TODO: deal with this unwrap?
+    let conn = conn.lock().unwrap();
+    let mut stmt =
+        conn.prepare_cached("SELECT title, body, date, author FROM announcements WHERE id = $1")?;
+    let announcement = stmt.query_row([id], |row| {
+        Ok(Announcement {
+            title: row.get(0)?,
+            body: row.get(1)?,
+            date: row.get(2)?,
+            author: row.get(3)?,
+        })
+    })?;
+
+    Ok(announcement)
+}
+
 pub async fn select_announcements(
     db_pool: deadpool_sqlite::Pool,
 ) -> anyhow::Result<Vec<Announcement>> {
@@ -76,6 +97,38 @@ pub async fn insert_announcement(
         announcement.date,
         announcement.author,
     ])?;
+
+    Ok(())
+}
+
+pub async fn update_announcement(
+    db_pool: deadpool_sqlite::Pool,
+    id: i32,
+    announcement: Announcement,
+) -> anyhow::Result<()> {
+    let conn = db_pool.get().await?;
+    // TODO: deal with this unwrap?
+    let conn = conn.lock().unwrap();
+    let mut stmt = conn.prepare_cached(
+        "UPDATE announcements SET title = $1, body = $2, date = $3, author = $4 WHERE id = $5",
+    )?;
+    stmt.execute(rusqlite::params![
+        announcement.title,
+        announcement.body,
+        announcement.date,
+        announcement.author,
+        id,
+    ])?;
+
+    Ok(())
+}
+
+pub async fn delete_announcement(db_pool: deadpool_sqlite::Pool, id: i32) -> anyhow::Result<()> {
+    let conn = db_pool.get().await?;
+    // TODO: deal with this unwrap?
+    let conn = conn.lock().unwrap();
+    let mut stmt = conn.prepare_cached("DELETE FROM announcements WHERE id = $1")?;
+    stmt.execute([id])?;
 
     Ok(())
 }
