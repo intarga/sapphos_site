@@ -5,4 +5,10 @@ CREATE TABLE IF NOT EXISTS announcements (
     date TEXT,
     -- TODO: should reference users table?
     author TEXT
-)
+);
+
+CREATE TABLE IF NOT EXISTS tower_sessions (
+    id TEXT PRIMARY KEY NOT NULL,
+    data BLOB NOT NULL,
+    expiry INTEGER NOT NULL
+);

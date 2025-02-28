@@ -10,12 +10,16 @@ use core::panic;
 use serde::Deserialize;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
+use tower_sessions::SessionManagerLayer;
 use tracing::error;
 
 mod announcements;
 use announcements::{AdminAnnouncement, Announcement};
 
 mod gcal;
+
+mod session_store;
+use session_store::DeadpoolSessionStore;
 
 #[derive(Clone, Debug)]
 pub struct Event {
@@ -182,6 +186,23 @@ async fn main() {
         conn.execute_batch(&db_schema)
             .expect("Failed to execute DB schema");
     }
+
+    let session_store = DeadpoolSessionStore::new(db_pool.clone());
+    // NOTE: disabled since expiry is turned off, needs `deletion_task` feature on tower_sessions_core
+    // background task to clean up expired sessions
+    // tokio::task::spawn(
+    //     session_store
+    //         .clone()
+    //         .continuously_delete_expired(tokio::time::Duration::from_secs(60)),
+    // );
+
+    let _session_layer = SessionManagerLayer::new(session_store)
+        // allow cookie on non-https sessions, as it doesn't contain any sensitive info
+        .with_secure(false)
+        // NOTE: leaving this off since we're a small trusted user group, and it would be nice to
+        // not have to log in all the time. If you enable it you'll also need to enable the deletion task above
+        //.with_expiry()
+        .with_signed(tower_sessions::cookie::Key::generate());
 
     let agenda = match gcal::fetch_calendar().await {
         Ok(agenda) => agenda,
