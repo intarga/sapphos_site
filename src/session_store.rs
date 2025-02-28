@@ -52,7 +52,7 @@ impl SessionStore for DeadpoolSessionStore {
                         record.id = Id::default()
                     }
 
-                    let data = bincode::serialize(&record).map_err(encode_err)?;
+                    let data = rmp_serde::to_vec(&record).map_err(encode_err)?;
                     let expiry = record.expiry_date.unix_timestamp();
                     let mut stmt_insert = tx
                         .prepare_cached(
@@ -77,8 +77,8 @@ impl SessionStore for DeadpoolSessionStore {
     }
 
     async fn save(&self, record: &Record) -> session_store::Result<()> {
-        let id = record.id.clone();
-        let data = bincode::serialize(record).map_err(encode_err)?;
+        let id = record.id;
+        let data = rmp_serde::to_vec(record).map_err(encode_err)?;
         let expiry = record.expiry_date.unix_timestamp();
 
         let conn = self.pool.get().await.map_err(backend_err)?;
@@ -117,7 +117,7 @@ impl SessionStore for DeadpoolSessionStore {
             .map_err(backend_err)?;
 
         let record = data
-            .map(|data| bincode::deserialize::<Record>(&data).map_err(decode_err))
+            .map(|data| rmp_serde::from_slice::<Record>(&data).map_err(decode_err))
             .transpose()?;
 
         Ok(record)

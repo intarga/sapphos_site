@@ -1,25 +1,25 @@
-use askama_axum::Template;
-use axum::{
-    extract::{Query, State},
-    http::StatusCode,
-    response::{IntoResponse, Redirect, Response},
-    routing::get,
-    Form, Router,
-};
+use axum_login::AuthManagerLayerBuilder;
 use core::panic;
-use serde::Deserialize;
 use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
 use tower_sessions::SessionManagerLayer;
 use tracing::error;
 
+/// Utils for dealing with announcements
 mod announcements;
-use announcements::{AdminAnnouncement, Announcement};
 
+/// Utils for dealing with google calendar
 mod gcal;
 
+/// Session-tracking cookies (needed for login) backed by our sqlite db
 mod session_store;
 use session_store::DeadpoolSessionStore;
+
+/// Plumbing to make authentication work
+mod auth;
+
+/// Routes and templates
+mod web;
 
 #[derive(Clone, Debug)]
 pub struct Event {
@@ -45,125 +45,6 @@ struct AppState {
     // TODO: should this contain the rendered template instead?
     agenda: Arc<RwLock<Agenda>>,
     db_pool: deadpool_sqlite::Pool,
-}
-
-#[derive(Deserialize)]
-struct IdQuery {
-    id: i32,
-}
-
-#[derive(Template)]
-#[template(path = "home.html")]
-struct HomeTemplate {
-    agenda: Agenda,
-    announcements: Vec<Announcement>,
-}
-
-#[derive(Template)]
-#[template(path = "admin.html")]
-struct AdminTemplate {
-    // agenda: Agenda,
-    announcements: Vec<AdminAnnouncement>,
-}
-
-#[derive(Template)]
-#[template(path = "new_announcement.html")]
-struct NewAnnouncementTemplate {}
-
-#[derive(Template)]
-#[template(path = "edit_announcement.html")]
-struct EditAnnouncementTemplate {
-    id: i32,
-    announcement: Announcement,
-}
-
-struct AppError(anyhow::Error);
-
-// TODO: make this a nice template
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Something went wrong: {}", self.0),
-        )
-            .into_response()
-    }
-}
-
-async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
-    // TODO: deal with this unwrap?
-    let agenda = state.agenda.read().unwrap().clone();
-    let announcements = announcements::select_announcements(state.db_pool)
-        .await
-        .map_err(AppError)?;
-
-    Ok(HomeTemplate {
-        agenda,
-        announcements,
-    })
-}
-
-async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError> {
-    let announcements = announcements::select_admin_announcements(state.db_pool)
-        .await
-        .map_err(AppError)?;
-
-    Ok(AdminTemplate { announcements })
-}
-
-async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
-    Ok(NewAnnouncementTemplate {})
-}
-
-async fn post_new_announcement(
-    State(state): State<AppState>,
-    Form(announcement): Form<Announcement>,
-) -> Result<Redirect, AppError> {
-    announcements::insert_announcement(state.db_pool, announcement)
-        .await
-        .map_err(AppError)?;
-
-    // TODO: should indicate success somehow?
-    Ok(Redirect::to("/admin"))
-}
-
-async fn get_edit_announcement(
-    State(state): State<AppState>,
-    query: Query<IdQuery>,
-) -> Result<EditAnnouncementTemplate, AppError> {
-    let announcement = announcements::select_announcement(state.db_pool, query.id)
-        .await
-        .map_err(AppError)?;
-
-    Ok(EditAnnouncementTemplate {
-        id: query.id,
-        announcement,
-    })
-}
-
-async fn post_edit_announcement(
-    State(state): State<AppState>,
-    query: Query<IdQuery>,
-    Form(announcement): Form<Announcement>,
-) -> Result<Redirect, AppError> {
-    announcements::update_announcement(state.db_pool, query.id, announcement)
-        .await
-        .map_err(AppError)?;
-
-    // TODO: should indicate success somehow?
-    Ok(Redirect::to("/admin"))
-}
-
-async fn delete_announcement(
-    State(state): State<AppState>,
-    query: Query<IdQuery>,
-) -> Result<Redirect, AppError> {
-    announcements::delete_announcement(state.db_pool, query.id)
-        .await
-        .map_err(AppError)?;
-
-    // TODO: should indicate success somehow?
-    Ok(Redirect::to("/admin"))
 }
 
 #[tokio::main]
@@ -196,13 +77,17 @@ async fn main() {
     //         .continuously_delete_expired(tokio::time::Duration::from_secs(60)),
     // );
 
-    let _session_layer = SessionManagerLayer::new(session_store)
+    let session_layer = SessionManagerLayer::new(session_store)
         // allow cookie on non-https sessions, as it doesn't contain any sensitive info
         .with_secure(false)
         // NOTE: leaving this off since we're a small trusted user group, and it would be nice to
         // not have to log in all the time. If you enable it you'll also need to enable the deletion task above
         //.with_expiry()
         .with_signed(tower_sessions::cookie::Key::generate());
+
+    let auth_layer =
+        AuthManagerLayerBuilder::new(auth::AuthBackend::new(db_pool.clone()), session_layer)
+            .build();
 
     let agenda = match gcal::fetch_calendar().await {
         Ok(agenda) => agenda,
@@ -224,20 +109,10 @@ async fn main() {
         tokio::time::interval(tokio::time::Duration::from_secs(5 * 60)),
     ));
 
-    let app = Router::new()
-        .route("/", get(home))
-        .route("/admin", get(admin))
-        .route(
-            "/new_announcement",
-            get(get_new_announcement).post(post_new_announcement),
-        )
-        .route(
-            "/edit_announcement",
-            get(get_edit_announcement).post(post_edit_announcement),
-        )
-        .route("/delete_announcement", get(delete_announcement))
+    let app = web::router()
         .with_state(state)
         .nest_service("/assets", ServeDir::new("assets"))
+        .layer(auth_layer)
         .layer(CompressionLayer::new());
 
     // run our app with hyper, listening globally on port 3000
