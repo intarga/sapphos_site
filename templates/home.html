@@ -79,6 +79,7 @@
           alt="Solid color waves to act as a transition between sections"
         />
       </section>
+      {% if !announcements.is_empty() %}
       <section id="announcements-section">
         <h2 id="announcements">Announcements</h2>
         {% for announcement in announcements %}
@@ -95,6 +96,14 @@
         </div>
         {% endfor %}
       </section>
+      {% else %}
+      <section id="about-section">
+        <h2 id="about">About us</h2>
+        <div id="about-text">
+          Sappho's Friends is a community for queer women, non-binary and trans people. Our core values include accessibility, inclusion and intersectional feminism.
+       </div>
+      </section>
+      {% endif %}
       <section id="agenda-section">
         <img 
           id="announcements-agenda-transition" 
@@ -131,18 +140,22 @@
           </div>
         {% endfor %}
         </div>
+        {% if !announcements.is_empty() %}
         <img 
           id="agenda-about-transition" 
           src="/assets/images/hero_transition.svg" 
           alt="Solid color waves to act as a transition between sections"
         />
+        {% endif %}
       </section>
+      {% if !announcements.is_empty() %}
       <section id="about-section">
         <h2 id="about">About us</h2>
         <div id="about-text">
           Sappho's Friends is a community for queer women, non-binary and trans people. Our core values include accessibility, inclusion and intersectional feminism.
        </div>
       </section>
+      {% endif %}
     </main>
   </body>
 </html>
