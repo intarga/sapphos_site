@@ -50,10 +50,19 @@
       </div>
       <div class="admin-events-list">
         <h2>Events</h2>
+        {% for event in events %}
         <div class="admin-event">
-          <div class="admin-event-info">Sample Event</div>
+          <div class="admin-event-info">
+            <strong>{{event.date.format("%d/%m/%Y")}}</strong> {{event.title}}
+          </div>
           <div class="admin-event-controls"></div>
+          <div class="admin-event-controls">
+            <a href="/edit_event?id={{event.id}}" class="edit-button button">Edit</a>
+            <a href="/delete_event?id={{event.id}}" class="delete-button button">Delete</a>
+          </div>
         </div>
+        {% endfor %}
+        <a href="/new_event" class="new-button button">+ Add Event</a>
       </div>
     </div>
   </body>

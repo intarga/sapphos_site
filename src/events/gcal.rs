@@ -1,4 +1,4 @@
-use super::{Agenda, AgendaMonth, Event};
+use crate::events::{Agenda, AgendaEvent, AgendaMonth, TaggedEvent};
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Datelike, Utc};
 use chrono_tz::Europe::Oslo;
@@ -7,11 +7,6 @@ use pulldown_cmark::Parser;
 use serde::{Deserialize, Deserializer};
 use std::sync::{Arc, RwLock};
 use tracing::{error, info};
-
-struct TaggedEvent {
-    event: Event,
-    month: String,
-}
 
 impl<'de> Deserialize<'de> for TaggedEvent {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -57,7 +52,7 @@ impl<'de> Deserialize<'de> for TaggedEvent {
             _ => "th",
         };
         Ok(TaggedEvent {
-            event: Event {
+            event: AgendaEvent {
                 title: raw_event.summary,
                 description,
                 location: raw_event.location.unwrap_or_else(|| String::from("")),
@@ -108,7 +103,7 @@ pub async fn fetch_calendar() -> Result<Agenda> {
         .chunk_by(|x| x.1.month.clone())
         .into_iter()
         .map(|group| {
-            let (events, months): (Vec<(usize, Event)>, Vec<String>) = group
+            let (events, months): (Vec<(usize, AgendaEvent)>, Vec<String>) = group
                 .1
                 .map(|tagged| ((tagged.0, tagged.1.event), tagged.1.month))
                 .unzip();

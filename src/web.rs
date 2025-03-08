@@ -1,8 +1,10 @@
 use crate::{
     announcements::{self, AdminAnnouncement, Announcement},
     auth::{self, AuthSession, Credentials},
-    Agenda, AppState,
+    events::{self, AdminEvent, Agenda, Event},
+    AppState,
 };
+use anyhow::anyhow;
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::{
@@ -13,11 +15,13 @@ use axum::{
     Form, Router,
 };
 use axum_login::login_required;
+use chrono::ParseError;
 use serde::Deserialize;
+use std::str::FromStr;
 
 #[derive(Debug, Deserialize)]
 struct IdQuery {
-    id: i32,
+    id: i64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -41,8 +45,8 @@ struct LoginTemplate {
 #[derive(Template, WebTemplate)]
 #[template(path = "admin.html")]
 struct AdminTemplate {
-    // agenda: Agenda,
     announcements: Vec<AdminAnnouncement>,
+    events: Vec<AdminEvent>,
 }
 
 #[derive(Template, WebTemplate)]
@@ -52,8 +56,19 @@ struct NewAnnouncementTemplate {}
 #[derive(Template, WebTemplate)]
 #[template(path = "edit_announcement.html")]
 struct EditAnnouncementTemplate {
-    id: i32,
+    id: i64,
     announcement: Announcement,
+}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "new_event.html")]
+struct NewEventTemplate {}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "edit_event.html")]
+struct EditEventTemplate {
+    id: i64,
+    event: Event,
 }
 
 struct AppError(anyhow::Error);
@@ -69,9 +84,72 @@ impl IntoResponse for AppError {
     }
 }
 
+#[derive(Clone, Debug, Deserialize)]
+struct FormEvent {
+    title: String,
+    location: String,
+    description: String,
+    start_date: String,
+    end_date: String,
+    start_time: String,
+    end_time: String,
+    host: String,
+    host_email: String,
+}
+
+fn optional_field(input: String) -> Option<String> {
+    if input == "" {
+        None
+    } else {
+        Some(input)
+    }
+}
+
+fn parse_optional_field<T: FromStr>(input: String) -> Result<Option<T>, AppError>
+where
+    <T as FromStr>::Err: Send,
+    <T as FromStr>::Err: Sync,
+    <T as FromStr>::Err: std::error::Error,
+    <T as FromStr>::Err: 'static,
+{
+    if input == "" {
+        Ok(None)
+    } else {
+        Ok(Some(
+            input
+                .parse()
+                .map_err(|e: <T as FromStr>::Err| AppError(anyhow!(e)))?,
+        ))
+    }
+}
+
+impl TryInto<Event> for FormEvent {
+    type Error = AppError;
+
+    fn try_into(self) -> Result<Event, Self::Error> {
+        Ok(Event {
+            title: self.title,
+            location: optional_field(self.location),
+            description: optional_field(self.description),
+            start_date: self
+                .start_date
+                .parse()
+                .map_err(|e: ParseError| AppError(anyhow!(e)))?,
+            end_date: parse_optional_field(self.end_date)?,
+            start_time: parse_optional_field(self.start_time)?,
+            end_time: parse_optional_field(self.end_time)?,
+            host: optional_field(self.host),
+            host_email: optional_field(self.host_email),
+        })
+    }
+}
+
 async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
     // TODO: deal with this unwrap?
-    let agenda = state.agenda.read().unwrap().clone();
+    let _gcal_agenda = state.gcal_agenda.read().unwrap().clone();
+    let agenda = events::make_agenda(state.db_pool.clone())
+        .await
+        .map_err(AppError)?;
     let announcements = announcements::select_announcements(state.db_pool)
         .await
         .map_err(AppError)?;
@@ -83,11 +161,18 @@ async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
 }
 
 async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError> {
-    let announcements = announcements::select_admin_announcements(state.db_pool)
+    let announcements = announcements::select_admin_announcements(state.db_pool.clone())
         .await
         .map_err(AppError)?;
 
-    Ok(AdminTemplate { announcements })
+    let events = events::select_admin_events(state.db_pool)
+        .await
+        .map_err(AppError)?;
+
+    Ok(AdminTemplate {
+        announcements,
+        events,
+    })
 }
 
 async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
@@ -145,6 +230,62 @@ async fn delete_announcement(
     Ok(Redirect::to("/admin"))
 }
 
+async fn get_new_event() -> Result<NewEventTemplate, AppError> {
+    Ok(NewEventTemplate {})
+}
+
+async fn post_new_event(
+    State(state): State<AppState>,
+    Form(event): Form<FormEvent>,
+) -> Result<Redirect, AppError> {
+    println!("{:?}", event);
+    events::insert_event(state.db_pool, event.try_into()?)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
+async fn get_edit_event(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+) -> Result<EditEventTemplate, AppError> {
+    let event = events::select_event(state.db_pool, query.id)
+        .await
+        .map_err(AppError)?;
+
+    Ok(EditEventTemplate {
+        id: query.id,
+        event,
+    })
+}
+
+async fn post_edit_event(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+    Form(event): Form<Event>,
+) -> Result<Redirect, AppError> {
+    events::update_event(state.db_pool, query.id, event)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
+async fn delete_event(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+) -> Result<Redirect, AppError> {
+    events::delete_event(state.db_pool, query.id)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
 async fn get_login(Query(NextQuery { next }): Query<NextQuery>) -> LoginTemplate {
     LoginTemplate { next }
 }
@@ -181,6 +322,9 @@ pub fn router() -> axum::Router<AppState> {
             get(get_edit_announcement).post(post_edit_announcement),
         )
         .route("/delete_announcement", get(delete_announcement))
+        .route("/new_event", get(get_new_event).post(post_new_event))
+        .route("/edit_event", get(get_edit_event).post(post_edit_event))
+        .route("/delete_event", get(delete_event))
         .route_layer(login_required!(auth::AuthBackend, login_url = "/login"))
         .route("/", get(home))
         .route("/login", get(get_login).post(post_login))

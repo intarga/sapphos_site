@@ -12,14 +12,14 @@ pub struct Announcement {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AdminAnnouncement {
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub date: NaiveDate,
 }
 
 pub async fn select_announcement(
     db_pool: deadpool_sqlite::Pool,
-    id: i32,
+    id: i64,
 ) -> anyhow::Result<Announcement> {
     let conn = db_pool.get().await?;
     // TODO: deal with this unwrap?
@@ -103,7 +103,7 @@ pub async fn insert_announcement(
 
 pub async fn update_announcement(
     db_pool: deadpool_sqlite::Pool,
-    id: i32,
+    id: i64,
     announcement: Announcement,
 ) -> anyhow::Result<()> {
     let conn = db_pool.get().await?;
@@ -123,7 +123,7 @@ pub async fn update_announcement(
     Ok(())
 }
 
-pub async fn delete_announcement(db_pool: deadpool_sqlite::Pool, id: i32) -> anyhow::Result<()> {
+pub async fn delete_announcement(db_pool: deadpool_sqlite::Pool, id: i64) -> anyhow::Result<()> {
     let conn = db_pool.get().await?;
     // TODO: deal with this unwrap?
     let conn = conn.lock().unwrap();

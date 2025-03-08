@@ -8,8 +8,9 @@ use tracing::error;
 /// Utils for dealing with announcements
 mod announcements;
 
-/// Utils for dealing with google calendar
-mod gcal;
+/// Utils for dealing with events
+mod events;
+use events::Agenda;
 
 /// Session-tracking cookies (needed for login) backed by our sqlite db
 mod session_store;
@@ -22,28 +23,9 @@ mod auth;
 mod web;
 
 #[derive(Clone, Debug)]
-pub struct Event {
-    pub title: String,
-    pub description: String,
-    pub location: String,
-    pub start_time: String,
-    pub end_time: String,
-    pub day: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct AgendaMonth {
-    pub month: String,
-    // the usize is an index used to decide how to colour the event divider
-    pub events: Vec<(usize, Event)>,
-}
-
-pub type Agenda = Vec<AgendaMonth>;
-
-#[derive(Clone, Debug)]
 struct AppState {
     // TODO: should this contain the rendered template instead?
-    agenda: Arc<RwLock<Agenda>>,
+    gcal_agenda: Arc<RwLock<Agenda>>,
     db_pool: deadpool_sqlite::Pool,
 }
 
@@ -89,7 +71,7 @@ async fn main() {
         AuthManagerLayerBuilder::new(auth::AuthBackend::new(db_pool.clone()), session_layer)
             .build();
 
-    let agenda = match gcal::fetch_calendar().await {
+    let agenda = match events::gcal::fetch_calendar().await {
         Ok(agenda) => agenda,
         Err(e) => {
             error!("Failed to initialise Agenda from GCal API: {}", e);
@@ -98,13 +80,13 @@ async fn main() {
     };
 
     let state = AppState {
-        agenda: Arc::new(RwLock::new(agenda)),
+        gcal_agenda: Arc::new(RwLock::new(agenda)),
         db_pool,
     };
 
     // Refresh the agenda in the background every 5 minutes
-    let background_agenda = state.agenda.clone();
-    tokio::task::spawn(gcal::refresh_agenda_at_interval(
+    let background_agenda = state.gcal_agenda.clone();
+    tokio::task::spawn(events::gcal::refresh_agenda_at_interval(
         background_agenda,
         tokio::time::interval(tokio::time::Duration::from_secs(5 * 60)),
     ));
