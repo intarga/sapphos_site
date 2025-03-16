@@ -5,7 +5,7 @@ use serde::Deserialize;
 #[derive(Clone, Debug, Deserialize)]
 pub struct Announcement {
     pub title: String,
-    pub body: String,
+    pub body: Option<String>,
     pub date: NaiveDate,
     pub author: String,
 }

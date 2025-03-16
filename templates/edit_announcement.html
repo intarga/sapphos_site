@@ -6,19 +6,19 @@
     <form action="edit_announcement?id={{id}}" method="post" class="announcement-form">
       <h1>Edit an Announcement</h1>
       <div class="form-field">
-        <label for="title">Title: </label>
+        <label for="title">Title: *</label>
         <input type="text" name="title" id="title" value="{{announcement.title}}" required />
       </div>
       <div class="form-field">
         <label for="body">Body: </label>
-        <textarea name="body" id="body" rows="10">{{announcement.body}}</textarea>
+        <textarea name="body" id="body" rows="10">{% if announcement.body.is_some() %}{{announcement.body.as_ref().unwrap()}}{% endif %}</textarea>
       </div>
       <div class="form-field">
-        <label for="date">Date: </label>
+        <label for="date">Date: *</label>
         <input type="date" name="date" id="date" value="{{announcement.date}}" required />
       </div>
       <div class="form-field">
-        <label for="author">Author: </label>
+        <label for="author">Author: *</label>
         <input type="text" name="author" id="author" value="{{announcement.author}}" required />
       </div>
       <div class="form-submit">
