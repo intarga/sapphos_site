@@ -19,6 +19,10 @@ use chrono::ParseError;
 use serde::Deserialize;
 use std::str::FromStr;
 
+const STYLESHEET_HOME: &str = "home.css?v=1.1";
+const STYLESHEET_ADMIN: &str = "admin.css?v=1.1";
+const STYLESHEET_FORM: &str = "form.css?v=1.1";
+
 #[derive(Debug, Deserialize)]
 struct IdQuery {
     id: i64,
@@ -27,6 +31,12 @@ struct IdQuery {
 #[derive(Debug, Deserialize)]
 struct NextQuery {
     next: Option<String>,
+}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "partials/head.html")]
+struct HeadTemplate {
+    stylesheet: &'static str,
 }
 
 #[derive(Template, WebTemplate)]
@@ -40,51 +50,143 @@ struct AdminNavTemplate {}
 #[derive(Template, WebTemplate)]
 #[template(path = "home.html")]
 struct HomeTemplate {
+    head: HeadTemplate,
     nav: HomeNavTemplate,
     agenda: Agenda,
     announcements: Vec<Announcement>,
 }
 
+impl HomeTemplate {
+    fn new(agenda: Agenda, announcements: Vec<Announcement>) -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_HOME,
+            },
+            nav: HomeNavTemplate {},
+            agenda,
+            announcements,
+        }
+    }
+}
+
 #[derive(Template, WebTemplate)]
 #[template(path = "login.html")]
 struct LoginTemplate {
+    head: HeadTemplate,
     next: Option<String>,
+}
+
+impl LoginTemplate {
+    fn new(next: Option<String>) -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_FORM,
+            },
+            next,
+        }
+    }
 }
 
 #[derive(Template, WebTemplate)]
 #[template(path = "admin.html")]
 struct AdminTemplate {
+    head: HeadTemplate,
     nav: AdminNavTemplate,
     announcements: Vec<AdminAnnouncement>,
     events: Vec<AdminEvent>,
 }
 
+impl AdminTemplate {
+    fn new(announcements: Vec<AdminAnnouncement>, events: Vec<AdminEvent>) -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_ADMIN,
+            },
+            nav: AdminNavTemplate {},
+            announcements,
+            events,
+        }
+    }
+}
+
 #[derive(Template, WebTemplate)]
 #[template(path = "new_announcement.html")]
 struct NewAnnouncementTemplate {
+    head: HeadTemplate,
     nav: AdminNavTemplate,
+}
+
+impl NewAnnouncementTemplate {
+    fn new() -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_FORM,
+            },
+            nav: AdminNavTemplate {},
+        }
+    }
 }
 
 #[derive(Template, WebTemplate)]
 #[template(path = "edit_announcement.html")]
 struct EditAnnouncementTemplate {
+    head: HeadTemplate,
     nav: AdminNavTemplate,
     id: i64,
     announcement: Announcement,
 }
 
+impl EditAnnouncementTemplate {
+    fn new(id: i64, announcement: Announcement) -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_FORM,
+            },
+            nav: AdminNavTemplate {},
+            id,
+            announcement,
+        }
+    }
+}
+
 #[derive(Template, WebTemplate)]
 #[template(path = "new_event.html")]
 struct NewEventTemplate {
+    head: HeadTemplate,
     nav: AdminNavTemplate,
+}
+
+impl NewEventTemplate {
+    fn new() -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_FORM,
+            },
+            nav: AdminNavTemplate {},
+        }
+    }
 }
 
 #[derive(Template, WebTemplate)]
 #[template(path = "edit_event.html")]
 struct EditEventTemplate {
+    head: HeadTemplate,
     nav: AdminNavTemplate,
     id: i64,
     event: Event,
+}
+
+impl EditEventTemplate {
+    fn new(id: i64, event: Event) -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_FORM,
+            },
+            nav: AdminNavTemplate {},
+            id,
+            event,
+        }
+    }
 }
 
 struct AppError(anyhow::Error);
@@ -170,11 +272,7 @@ async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
         .await
         .map_err(AppError)?;
 
-    Ok(HomeTemplate {
-        nav: HomeNavTemplate {},
-        agenda,
-        announcements,
-    })
+    Ok(HomeTemplate::new(agenda, announcements))
 }
 
 async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError> {
@@ -186,17 +284,11 @@ async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError>
         .await
         .map_err(AppError)?;
 
-    Ok(AdminTemplate {
-        nav: AdminNavTemplate {},
-        announcements,
-        events,
-    })
+    Ok(AdminTemplate::new(announcements, events))
 }
 
 async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
-    Ok(NewAnnouncementTemplate {
-        nav: AdminNavTemplate {},
-    })
+    Ok(NewAnnouncementTemplate::new())
 }
 
 async fn post_new_announcement(
@@ -219,11 +311,7 @@ async fn get_edit_announcement(
         .await
         .map_err(AppError)?;
 
-    Ok(EditAnnouncementTemplate {
-        nav: AdminNavTemplate {},
-        id: query.id,
-        announcement,
-    })
+    Ok(EditAnnouncementTemplate::new(query.id, announcement))
 }
 
 async fn post_edit_announcement(
@@ -252,9 +340,7 @@ async fn delete_announcement(
 }
 
 async fn get_new_event() -> Result<NewEventTemplate, AppError> {
-    Ok(NewEventTemplate {
-        nav: AdminNavTemplate {},
-    })
+    Ok(NewEventTemplate::new())
 }
 
 async fn post_new_event(
@@ -278,11 +364,7 @@ async fn get_edit_event(
         .await
         .map_err(AppError)?;
 
-    Ok(EditEventTemplate {
-        nav: AdminNavTemplate {},
-        id: query.id,
-        event,
-    })
+    Ok(EditEventTemplate::new(query.id, event))
 }
 
 async fn post_edit_event(
@@ -311,7 +393,7 @@ async fn delete_event(
 }
 
 async fn get_login(Query(NextQuery { next }): Query<NextQuery>) -> LoginTemplate {
-    LoginTemplate { next }
+    LoginTemplate::new(next)
 }
 
 async fn post_login(
