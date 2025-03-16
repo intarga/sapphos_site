@@ -44,7 +44,8 @@ pub async fn select_announcements(
     let conn = db_pool.get().await?;
     // TODO: deal with this unwrap?
     let conn = conn.lock().unwrap();
-    let mut stmt = conn.prepare_cached("SELECT title, body, date, author FROM announcements")?;
+    let mut stmt = conn
+        .prepare_cached("SELECT title, body, date, author FROM announcements ORDER BY id DESC")?;
     let announcements = stmt
         .query_map([], |row| {
             Ok(Announcement {
@@ -66,7 +67,8 @@ pub async fn select_admin_announcements(
     let conn = db_pool.get().await?;
     // TODO: deal with this unwrap?
     let conn = conn.lock().unwrap();
-    let mut stmt = conn.prepare_cached("SELECT id, title, date FROM announcements")?;
+    let mut stmt =
+        conn.prepare_cached("SELECT id, title, date FROM announcements ORDER BY id DESC")?;
     let announcements = stmt
         .query_map([], |row| {
             Ok(AdminAnnouncement {

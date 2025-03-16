@@ -34,7 +34,9 @@
       <h1>Admin Panel</h1>
       <div class="admin-announcements-list">
         <h2>Announcements</h2>
+        <a href="/new_announcement" class="new-button button">+ Add Announcement</a>
         {% for announcement in announcements %}
+        <hr/>
         <div class="admin-announcement">
           <div class="admin-announcement-info">
             <strong>{{announcement.date.format("%d/%m/%Y")}}</strong> {{announcement.title}}
@@ -44,13 +46,13 @@
             <a href="/delete_announcement?id={{announcement.id}}" class="delete-button button">Delete</a>
           </div>
         </div>
-        <hr/>
         {% endfor %}
-        <a href="/new_announcement" class="new-button button">+ Add Announcement</a>
       </div>
       <div class="admin-events-list">
         <h2>Events</h2>
+        <a href="/new_event" class="new-button button">+ Add Event</a>
         {% for event in events %}
+        <hr/>
         <div class="admin-event">
           <div class="admin-event-info">
             <strong>{{event.date.format("%d/%m/%Y")}}</strong> {{event.title}}
@@ -62,7 +64,6 @@
           </div>
         </div>
         {% endfor %}
-        <a href="/new_event" class="new-button button">+ Add Event</a>
       </div>
     </div>
   </body>

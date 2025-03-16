@@ -112,6 +112,7 @@ pub async fn select_events(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Vec
                     host,
                     host_email
                 FROM events
+                ORDER BY start_date ASC
                 "#,
             )?;
             let events = stmt
@@ -208,7 +209,9 @@ pub async fn select_admin_events(
     let conn = db_pool.get().await?;
     let events = conn
         .interact(move |conn| {
-            let mut stmt = conn.prepare_cached("SELECT id, title, start_date FROM events")?;
+            let mut stmt = conn.prepare_cached(
+                "SELECT id, title, start_date FROM events ORDER BY start_date ASC",
+            )?;
             let events = stmt
                 .query_map([], |row| {
                     Ok(AdminEvent {
