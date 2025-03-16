@@ -172,11 +172,11 @@ pub async fn make_agenda(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Agend
                     start_time: event
                         .start_time
                         .map(|time| time.format("%H:%M").to_string())
-                        .unwrap_or_else(|| "-----".to_string()),
+                        .unwrap_or_else(|| "––:––".to_string()),
                     end_time: event
                         .end_time
                         .map(|time| time.format("%H:%M").to_string())
-                        .unwrap_or_else(|| "-----".to_string()),
+                        .unwrap_or_else(|| "––:––".to_string()),
                     day: format!("{} the {}{}", weekday, day_of_month, ordinal),
                 },
                 month: event.start_date.format("%B").to_string(),

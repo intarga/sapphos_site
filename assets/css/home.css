@@ -230,10 +230,13 @@
 
 .event-start {
   text-align: right;
+  /* sadly not working with athiti :( */
+  font-variant-numeric: tabular-nums;
 }
 
 .event-end {
   text-align: right;
+  font-variant-numeric: tabular-nums;
   color: gray;
 }
 
