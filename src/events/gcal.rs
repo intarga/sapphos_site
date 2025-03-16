@@ -1,71 +1,48 @@
-use crate::events::{Agenda, AgendaEvent, AgendaMonth, TaggedEvent};
+use crate::events::Event;
 use anyhow::{anyhow, Result};
-use chrono::{DateTime, Datelike, Utc};
+use chrono::{DateTime, Utc};
 use chrono_tz::Europe::Oslo;
-use itertools::Itertools;
-use pulldown_cmark::Parser;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use std::sync::{Arc, RwLock};
 use tracing::{error, info};
 
-impl<'de> Deserialize<'de> for TaggedEvent {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        struct RawEvent {
-            summary: String,
-            description: Option<String>,
-            location: Option<String>,
-            start: RawTime,
-            end: RawTime,
-        }
+#[derive(Deserialize, PartialEq, Eq)]
+struct RawTime {
+    #[serde(rename = "dateTime")]
+    date_time: DateTime<Utc>,
+}
 
-        #[derive(Deserialize)]
-        struct RawTime {
-            #[serde(rename = "dateTime")]
-            date_time: DateTime<Utc>,
-        }
+#[derive(Deserialize)]
+struct RawEvent {
+    summary: String,
+    description: Option<String>,
+    location: Option<String>,
+    start: RawTime,
+    end: RawTime,
+}
 
-        let raw_event = RawEvent::deserialize(deserializer)?;
+fn process_event(raw_event: RawEvent) -> Event {
+    let start_date = raw_event.start.date_time.with_timezone(&Oslo).date_naive();
+    let end_date = if raw_event.start == raw_event.end {
+        None
+    } else {
+        Some(raw_event.end.date_time.with_timezone(&Oslo).date_naive())
+    };
 
-        let start = raw_event.start.date_time.with_timezone(&Oslo);
-        let end = raw_event.end.date_time.with_timezone(&Oslo);
-
-        let description = raw_event
-            .description
-            .map(|d| {
-                let parser = Parser::new(&d);
-                let mut output = String::new();
-                pulldown_cmark::html::push_html(&mut output, parser);
-                output
-            })
-            .unwrap_or_else(|| "".to_string());
-
-        let weekday = start.format("%A");
-        let day_of_month = start.day();
-        let ordinal = match day_of_month {
-            1 | 21 | 31 => "st",
-            2 | 22 => "nd",
-            3 | 23 => "rd",
-            _ => "th",
-        };
-        Ok(TaggedEvent {
-            event: AgendaEvent {
-                title: raw_event.summary,
-                description,
-                location: raw_event.location.unwrap_or_else(|| String::from("")),
-                start_time: start.format("%R").to_string(),
-                end_time: end.format("%R").to_string(),
-                day: format!("{} the {}{}", weekday, day_of_month, ordinal),
-            },
-            month: start.format("%B").to_string(),
-        })
+    Event {
+        title: raw_event.summary,
+        location: raw_event.location,
+        description: raw_event.description,
+        start_date,
+        end_date,
+        start_time: Some(raw_event.start.date_time.with_timezone(&Oslo).time()),
+        end_time: Some(raw_event.end.date_time.with_timezone(&Oslo).time()),
+        host: None,
+        host_email: None,
     }
 }
 
-pub async fn fetch_calendar() -> Result<Agenda> {
+pub async fn fetch_calendar() -> Result<Vec<Event>> {
     let client = reqwest::Client::new();
 
     let calendar_id =
@@ -90,33 +67,17 @@ pub async fn fetch_calendar() -> Result<Agenda> {
         .json()
         .await?;
 
-    let events: Vec<TaggedEvent> = serde_json::from_value(
+    let raw_events: Vec<RawEvent> = serde_json::from_value(
         resp.get_mut("items")
             .ok_or_else(|| anyhow!("GCal JSON resonse did not contain key \"items\""))?
             .take(),
     )?;
 
-    // FIXME: this is crimes
-    Ok(events
-        .into_iter()
-        .enumerate()
-        .chunk_by(|x| x.1.month.clone())
-        .into_iter()
-        .map(|group| {
-            let (events, months): (Vec<(usize, AgendaEvent)>, Vec<String>) = group
-                .1
-                .map(|tagged| ((tagged.0, tagged.1.event), tagged.1.month))
-                .unzip();
-            AgendaMonth {
-                month: months.first().unwrap().clone(),
-                events,
-            }
-        })
-        .collect())
+    Ok(raw_events.into_iter().map(process_event).collect())
 }
 
 pub async fn refresh_agenda_at_interval(
-    background_agenda: Arc<RwLock<Vec<AgendaMonth>>>,
+    background_agenda: Arc<RwLock<Vec<Event>>>,
     mut interval: tokio::time::Interval,
 ) {
     'refresh: loop {

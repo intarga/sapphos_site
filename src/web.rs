@@ -216,7 +216,7 @@ struct FormEvent {
 }
 
 fn optional_field(input: String) -> Option<String> {
-    if input == "" {
+    if input.is_empty() {
         None
     } else {
         Some(input)
@@ -230,7 +230,7 @@ where
     <T as FromStr>::Err: std::error::Error,
     <T as FromStr>::Err: 'static,
 {
-    if input == "" {
+    if input.is_empty() {
         Ok(None)
     } else {
         Ok(Some(
@@ -264,8 +264,8 @@ impl TryInto<Event> for FormEvent {
 
 async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
     // TODO: deal with this unwrap?
-    let _gcal_agenda = state.gcal_agenda.read().unwrap().clone();
-    let agenda = events::make_agenda(state.db_pool.clone())
+    let gcal_agenda = state.gcal_agenda.read().unwrap().clone();
+    let agenda = events::make_agenda(state.db_pool.clone(), gcal_agenda)
         .await
         .map_err(AppError)?;
     let announcements = announcements::select_announcements(state.db_pool)

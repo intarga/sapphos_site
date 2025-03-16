@@ -10,7 +10,7 @@ mod announcements;
 
 /// Utils for dealing with events
 mod events;
-use events::Agenda;
+use events::Event;
 
 /// Session-tracking cookies (needed for login) backed by our sqlite db
 mod session_store;
@@ -25,7 +25,7 @@ mod web;
 #[derive(Clone, Debug)]
 struct AppState {
     // TODO: should this contain the rendered template instead?
-    gcal_agenda: Arc<RwLock<Agenda>>,
+    gcal_agenda: Arc<RwLock<Vec<Event>>>,
     db_pool: deadpool_sqlite::Pool,
 }
 

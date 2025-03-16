@@ -115,6 +115,7 @@ pub async fn select_events(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Vec
                 ORDER BY start_date ASC
                 "#,
             )?;
+            #[allow(clippy::let_and_return)]
             let events = stmt
                 .query_map([], |row| {
                     Ok(Event {
@@ -140,15 +141,29 @@ pub async fn select_events(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Vec
     Ok(events)
 }
 
-pub async fn make_agenda(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Agenda> {
-    let events = select_events(db_pool).await?;
+pub async fn make_agenda(
+    db_pool: deadpool_sqlite::Pool,
+    gcal_events: Vec<Event>,
+) -> anyhow::Result<Agenda> {
+    // TODO: remove when we're done using gcal
+    let events = {
+        let mut events = select_events(db_pool).await?;
+        let mut gcal_events = gcal_events.clone();
+        events.append(&mut gcal_events);
+        events.sort_by(|a, b| {
+            a.start_date
+                .cmp(&b.start_date)
+                .then(a.start_time.cmp(&b.start_time))
+        });
+        events
+    };
 
     let tagged_events: Vec<TaggedEvent> = events
         .into_iter()
         .map(|event| {
             // TODO: should do on intake instead?
             let description = {
-                let description = event.description.unwrap_or_else(|| "".to_string());
+                let description = event.description.unwrap_or_default();
                 let parser = Parser::new(&description);
                 let mut output = String::new();
                 pulldown_cmark::html::push_html(&mut output, parser);
@@ -168,7 +183,7 @@ pub async fn make_agenda(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Agend
                 event: AgendaEvent {
                     title: event.title,
                     description,
-                    location: event.location.unwrap_or_else(|| "".to_string()),
+                    location: event.location.unwrap_or_default(),
                     start_time: event
                         .start_time
                         .map(|time| time.format("%H:%M").to_string())
@@ -212,6 +227,7 @@ pub async fn select_admin_events(
             let mut stmt = conn.prepare_cached(
                 "SELECT id, title, start_date FROM events ORDER BY start_date ASC",
             )?;
+            #[allow(clippy::let_and_return)]
             let events = stmt
                 .query_map([], |row| {
                     Ok(AdminEvent {
