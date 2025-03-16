@@ -120,12 +120,24 @@ button {
   color: var(--space-cadet);
   font-weight: bold;
 }
+nav.dark#navbar .navbar-section > a {
+  color: var(--space-cadet);
+}
+nav.light#navbar .navbar-section > a {
+  color: var(--ivory);
+}
 
 .navbar-section > a > svg {
   /* height: 100%; */
   fill: var(--space-cadet);
   max-height: 1em;
   width: 1.25em;
+}
+nav.dark#navbar .navbar-section > a > svg {
+  fill: var(--space-cadet);
+}
+nav.light#navbar .navbar-section > a > svg {
+  fill: var(--ivory);
 }
 
 /* @media screen and (max-width: var(--content-width)) { */

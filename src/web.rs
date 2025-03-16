@@ -30,13 +30,17 @@ struct NextQuery {
 }
 
 #[derive(Template, WebTemplate)]
-#[template(path = "partials/nav.html")]
-struct NavTemplate {}
+#[template(path = "partials/home-nav.html")]
+struct HomeNavTemplate {}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "partials/admin-nav.html")]
+struct AdminNavTemplate {}
 
 #[derive(Template, WebTemplate)]
 #[template(path = "home.html")]
 struct HomeTemplate {
-    nav: NavTemplate,
+    nav: HomeNavTemplate,
     agenda: Agenda,
     announcements: Vec<Announcement>,
 }
@@ -50,28 +54,35 @@ struct LoginTemplate {
 #[derive(Template, WebTemplate)]
 #[template(path = "admin.html")]
 struct AdminTemplate {
+    nav: AdminNavTemplate,
     announcements: Vec<AdminAnnouncement>,
     events: Vec<AdminEvent>,
 }
 
 #[derive(Template, WebTemplate)]
 #[template(path = "new_announcement.html")]
-struct NewAnnouncementTemplate {}
+struct NewAnnouncementTemplate {
+    nav: AdminNavTemplate,
+}
 
 #[derive(Template, WebTemplate)]
 #[template(path = "edit_announcement.html")]
 struct EditAnnouncementTemplate {
+    nav: AdminNavTemplate,
     id: i64,
     announcement: Announcement,
 }
 
 #[derive(Template, WebTemplate)]
 #[template(path = "new_event.html")]
-struct NewEventTemplate {}
+struct NewEventTemplate {
+    nav: AdminNavTemplate,
+}
 
 #[derive(Template, WebTemplate)]
 #[template(path = "edit_event.html")]
 struct EditEventTemplate {
+    nav: AdminNavTemplate,
     id: i64,
     event: Event,
 }
@@ -160,7 +171,7 @@ async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
         .map_err(AppError)?;
 
     Ok(HomeTemplate {
-        nav: NavTemplate {},
+        nav: HomeNavTemplate {},
         agenda,
         announcements,
     })
@@ -176,13 +187,16 @@ async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError>
         .map_err(AppError)?;
 
     Ok(AdminTemplate {
+        nav: AdminNavTemplate {},
         announcements,
         events,
     })
 }
 
 async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
-    Ok(NewAnnouncementTemplate {})
+    Ok(NewAnnouncementTemplate {
+        nav: AdminNavTemplate {},
+    })
 }
 
 async fn post_new_announcement(
@@ -206,6 +220,7 @@ async fn get_edit_announcement(
         .map_err(AppError)?;
 
     Ok(EditAnnouncementTemplate {
+        nav: AdminNavTemplate {},
         id: query.id,
         announcement,
     })
@@ -237,7 +252,9 @@ async fn delete_announcement(
 }
 
 async fn get_new_event() -> Result<NewEventTemplate, AppError> {
-    Ok(NewEventTemplate {})
+    Ok(NewEventTemplate {
+        nav: AdminNavTemplate {},
+    })
 }
 
 async fn post_new_event(
@@ -262,6 +279,7 @@ async fn get_edit_event(
         .map_err(AppError)?;
 
     Ok(EditEventTemplate {
+        nav: AdminNavTemplate {},
         id: query.id,
         event,
     })
@@ -313,7 +331,7 @@ async fn post_login(
 async fn logout(auth_session: AuthSession) -> Result<Redirect, AppError> {
     auth::logout(auth_session).await.map_err(AppError)?;
 
-    Ok(Redirect::to("/login"))
+    Ok(Redirect::to("/login?next=/admin"))
 }
 
 pub fn router() -> axum::Router<AppState> {
