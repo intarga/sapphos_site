@@ -30,8 +30,13 @@ struct NextQuery {
 }
 
 #[derive(Template, WebTemplate)]
+#[template(path = "partials/nav.html")]
+struct NavTemplate {}
+
+#[derive(Template, WebTemplate)]
 #[template(path = "home.html")]
 struct HomeTemplate {
+    nav: NavTemplate,
     agenda: Agenda,
     announcements: Vec<Announcement>,
 }
@@ -155,6 +160,7 @@ async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
         .map_err(AppError)?;
 
     Ok(HomeTemplate {
+        nav: NavTemplate {},
         agenda,
         announcements,
     })
