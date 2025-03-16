@@ -15,7 +15,8 @@ use axum::{
     Form, Router,
 };
 use axum_login::login_required;
-use chrono::ParseError;
+use chrono::{NaiveDate, ParseError};
+use chrono_tz::Europe::Oslo;
 use serde::Deserialize;
 use std::str::FromStr;
 
@@ -114,15 +115,19 @@ impl AdminTemplate {
 struct NewAnnouncementTemplate {
     head: HeadTemplate,
     nav: AdminNavTemplate,
+    author: String,
+    date: NaiveDate,
 }
 
 impl NewAnnouncementTemplate {
-    fn new() -> Self {
+    fn new(author: String, date: NaiveDate) -> Self {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_FORM,
             },
             nav: AdminNavTemplate {},
+            author,
+            date,
         }
     }
 }
@@ -287,8 +292,16 @@ async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError>
     Ok(AdminTemplate::new(announcements, events))
 }
 
-async fn get_new_announcement() -> Result<NewAnnouncementTemplate, AppError> {
-    Ok(NewAnnouncementTemplate::new())
+async fn get_new_announcement(
+    auth_session: AuthSession,
+) -> Result<NewAnnouncementTemplate, AppError> {
+    let author = auth_session
+        .user
+        .map(|user| user.username)
+        .unwrap_or_default();
+    let date = chrono::Utc::now().with_timezone(&Oslo).naive_local().date();
+
+    Ok(NewAnnouncementTemplate::new(author, date))
 }
 
 async fn post_new_announcement(
