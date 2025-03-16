@@ -9,6 +9,11 @@ name = "add_user"
 test = false
 bench = false
 
+[[bin]]
+name = "migrate_events"
+test = false
+bench = false
+
 [dependencies]
 anyhow = "1.0.95"
 askama = "0.12.1"
