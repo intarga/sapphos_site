@@ -79,6 +79,7 @@ h2 {
   color: var(--salmon-pink);
   font-size: var(--font-xl);
   text-align: center;
+  overflow-wrap: break-word;
 }
 
 button {
