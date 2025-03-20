@@ -20,6 +20,16 @@ form {
 form h1 {
   text-align: center;
   color: var(--salmon-pink);
+
+  /* prevent overlap with nav */
+  margin-top: 4rem;
+}
+
+@media screen and (max-width: 50rem) {
+  form h1 {
+    /* nav has two rows on narrow screen, so we need a bigger margin */
+    margin-top: 7rem;
+  }
 }
 
 form input, form label, form textarea {
@@ -60,6 +70,9 @@ form textarea {
 
 .form-submit {
   align-self: flex-end;
+
+  /* allow a little blank space at the bottom of the screen to avoid a crammed feeling */
+  margin-bottom: 2rem;
 }
 
 form button {
