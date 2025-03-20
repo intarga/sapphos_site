@@ -112,6 +112,9 @@ pub async fn select_events(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Vec
                     host,
                     host_email
                 FROM events
+                WHERE start_date BETWEEN
+                    date('now','-1 day') AND
+                    date('now','-1 day','start of month','+1 year', '-1 day')
                 ORDER BY start_date ASC
                 "#,
             )?;
