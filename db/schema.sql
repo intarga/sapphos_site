@@ -33,3 +33,9 @@ CREATE TABLE IF NOT EXISTS events (
     host TEXT,
     host_email TEXT
 );
+
+CREATE TABLE IF NOT EXISTS signal_chats (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    link TEXT NOT NULL
+);

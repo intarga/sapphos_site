@@ -7,6 +7,9 @@ mod announcements;
 pub mod events;
 use events::Event;
 
+/// Utils for dealing with signal chats
+pub mod signal;
+
 /// Session-tracking cookies (needed for login) backed by our sqlite db
 pub mod session_store;
 

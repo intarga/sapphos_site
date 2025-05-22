@@ -2,6 +2,7 @@ use crate::{
     announcements::{self, AdminAnnouncement, Announcement},
     auth::{self, AuthSession, Credentials},
     events::{self, AdminEvent, Agenda, Event},
+    signal::{self, AdminChat, Chat},
     AppState,
 };
 use anyhow::anyhow;
@@ -20,9 +21,10 @@ use chrono_tz::Europe::Oslo;
 use serde::Deserialize;
 use std::str::FromStr;
 
-const STYLESHEET_HOME: &str = "home.css?v=1.1";
-const STYLESHEET_ADMIN: &str = "admin.css?v=1.1";
-const STYLESHEET_FORM: &str = "form.css?v=1.1";
+const STYLESHEET_HOME: &str = "home.css?v=1.2";
+const STYLESHEET_SIGNAL: &str = "signal.css?v=1.2";
+const STYLESHEET_ADMIN: &str = "admin.css?v=1.2";
+const STYLESHEET_FORM: &str = "form.css?v=1.2";
 
 #[derive(Debug, Deserialize)]
 struct IdQuery {
@@ -34,6 +36,20 @@ struct NextQuery {
     next: Option<String>,
 }
 
+enum NavTheme {
+    Light,
+    Dark,
+}
+
+impl std::fmt::Display for NavTheme {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Self::Light => write!(f, "light"),
+            Self::Dark => write!(f, "dark"),
+        }
+    }
+}
+
 #[derive(Template, WebTemplate)]
 #[template(path = "partials/head.html")]
 struct HeadTemplate {
@@ -42,7 +58,9 @@ struct HeadTemplate {
 
 #[derive(Template, WebTemplate)]
 #[template(path = "partials/home-nav.html")]
-struct HomeNavTemplate {}
+struct HomeNavTemplate {
+    nav_theme: NavTheme,
+}
 
 #[derive(Template, WebTemplate)]
 #[template(path = "partials/admin-nav.html")]
@@ -63,9 +81,33 @@ impl HomeTemplate {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_HOME,
             },
-            nav: HomeNavTemplate {},
+            nav: HomeNavTemplate {
+                nav_theme: NavTheme::Dark,
+            },
             agenda,
             announcements,
+        }
+    }
+}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "signal.html")]
+struct SignalTemplate {
+    head: HeadTemplate,
+    nav: HomeNavTemplate,
+    chats: Vec<Chat>,
+}
+
+impl SignalTemplate {
+    fn new(subchats: Vec<Chat>) -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_SIGNAL,
+            },
+            nav: HomeNavTemplate {
+                nav_theme: NavTheme::Light,
+            },
+            chats: subchats,
         }
     }
 }
@@ -95,10 +137,15 @@ struct AdminTemplate {
     nav: AdminNavTemplate,
     announcements: Vec<AdminAnnouncement>,
     events: Vec<AdminEvent>,
+    chats: Vec<AdminChat>,
 }
 
 impl AdminTemplate {
-    fn new(announcements: Vec<AdminAnnouncement>, events: Vec<AdminEvent>) -> Self {
+    fn new(
+        announcements: Vec<AdminAnnouncement>,
+        events: Vec<AdminEvent>,
+        chats: Vec<AdminChat>,
+    ) -> Self {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_ADMIN,
@@ -106,6 +153,7 @@ impl AdminTemplate {
             nav: AdminNavTemplate {},
             announcements,
             events,
+            chats,
         }
     }
 }
@@ -150,6 +198,46 @@ impl EditAnnouncementTemplate {
             nav: AdminNavTemplate {},
             id,
             announcement,
+        }
+    }
+}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "new_chat.html")]
+struct NewChatTemplate {
+    head: HeadTemplate,
+    nav: AdminNavTemplate,
+}
+
+impl NewChatTemplate {
+    fn new() -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_FORM,
+            },
+            nav: AdminNavTemplate {},
+        }
+    }
+}
+
+#[derive(Template, WebTemplate)]
+#[template(path = "edit_chat.html")]
+struct EditChatTemplate {
+    head: HeadTemplate,
+    nav: AdminNavTemplate,
+    id: i64,
+    chat: Chat,
+}
+
+impl EditChatTemplate {
+    fn new(id: i64, chat: Chat) -> Self {
+        Self {
+            head: HeadTemplate {
+                stylesheet: STYLESHEET_FORM,
+            },
+            nav: AdminNavTemplate {},
+            id,
+            chat,
         }
     }
 }
@@ -280,16 +368,28 @@ async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
     Ok(HomeTemplate::new(agenda, announcements))
 }
 
+async fn signal(State(state): State<AppState>) -> Result<SignalTemplate, AppError> {
+    let chats = signal::select_chats(state.db_pool)
+        .await
+        .map_err(AppError)?;
+
+    Ok(SignalTemplate::new(chats))
+}
+
 async fn admin(State(state): State<AppState>) -> Result<AdminTemplate, AppError> {
     let announcements = announcements::select_admin_announcements(state.db_pool.clone())
         .await
         .map_err(AppError)?;
 
-    let events = events::select_admin_events(state.db_pool)
+    let events = events::select_admin_events(state.db_pool.clone())
         .await
         .map_err(AppError)?;
 
-    Ok(AdminTemplate::new(announcements, events))
+    let chats = signal::select_admin_chats(state.db_pool)
+        .await
+        .map_err(AppError)?;
+
+    Ok(AdminTemplate::new(announcements, events, chats))
 }
 
 async fn get_new_announcement(
@@ -360,7 +460,6 @@ async fn post_new_event(
     State(state): State<AppState>,
     Form(event): Form<FormEvent>,
 ) -> Result<Redirect, AppError> {
-    println!("{:?}", event);
     events::insert_event(state.db_pool, event.try_into()?)
         .await
         .map_err(AppError)?;
@@ -398,6 +497,58 @@ async fn delete_event(
     query: Query<IdQuery>,
 ) -> Result<Redirect, AppError> {
     events::delete_event(state.db_pool, query.id)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
+async fn get_new_chat() -> Result<NewChatTemplate, AppError> {
+    Ok(NewChatTemplate::new())
+}
+
+async fn post_new_chat(
+    State(state): State<AppState>,
+    Form(chat): Form<Chat>,
+) -> Result<Redirect, AppError> {
+    signal::insert_chat(state.db_pool, chat)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
+async fn get_edit_chat(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+) -> Result<EditChatTemplate, AppError> {
+    let chat = signal::select_chat(state.db_pool, query.id)
+        .await
+        .map_err(AppError)?;
+
+    Ok(EditChatTemplate::new(query.id, chat))
+}
+
+async fn post_edit_chat(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+    Form(chat): Form<Chat>,
+) -> Result<Redirect, AppError> {
+    signal::update_chat(state.db_pool, query.id, chat)
+        .await
+        .map_err(AppError)?;
+
+    // TODO: should indicate success somehow?
+    Ok(Redirect::to("/admin"))
+}
+
+async fn delete_chat(
+    State(state): State<AppState>,
+    query: Query<IdQuery>,
+) -> Result<Redirect, AppError> {
+    signal::delete_chat(state.db_pool, query.id)
         .await
         .map_err(AppError)?;
 
@@ -444,8 +595,12 @@ pub fn router() -> axum::Router<AppState> {
         .route("/new_event", get(get_new_event).post(post_new_event))
         .route("/edit_event", get(get_edit_event).post(post_edit_event))
         .route("/delete_event", get(delete_event))
+        .route("/new_chat", get(get_new_chat).post(post_new_chat))
+        .route("/edit_chat", get(get_edit_chat).post(post_edit_chat))
+        .route("/delete_chat", get(delete_chat))
         .route_layer(login_required!(auth::AuthBackend, login_url = "/login"))
         .route("/", get(home))
         .route("/login", get(get_login).post(post_login))
         .route("/logout", get(logout))
+        .route("/signal", get(signal))
 }

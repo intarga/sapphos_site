@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  {{head|safe}}
+  <body>
+    {{nav|safe}}
+    <form action="new_chat" method="post" class="chat-form">
+      <h1>Create a Chat</h1>
+      <div class="form-field">
+        <label for="name">Name: *</label>
+        <input type="text" name="name" id="name" required />
+      </div>
+      <div class="form-field">
+        <label for="link">Link: *</label>
+        <input type="text" name="link" id="link" required />
+      </div>
+      <div class="form-submit">
+        <button type="submit">Post!</button>
+      </div>
+    </form>
+  </body>
+</html>

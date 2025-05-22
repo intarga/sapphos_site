@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  {{head|safe}}
+  <body>
+    <main>
+      {{nav|safe}}
+      <div id="chats-panel">
+        <h1>Our signal chats</h1>
+        <div id="chats-list">
+          {% for chat in chats %}
+          <div class="chat">
+            <a href="{{chat.link}}">{{chat.name}}</a>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

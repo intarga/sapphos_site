@@ -38,6 +38,22 @@
         </div>
         {% endfor %}
       </div>
+      <div class="admin-chats-list">
+        <h2>Chats</h2>
+        {% for chat in chats %}
+        <div class="admin-chat">
+          <div class="admin-chat-info">
+            <strong>{{chat.name}}</strong>
+          </div>
+          <div class="admin-chat-controls">
+            <a href="/edit_chat?id={{chat.id}}" class="edit-button button">Edit</a>
+            <a href="/delete_chat?id={{chat.id}}" class="delete-button button">Delete</a>
+          </div>
+        </div>
+        <hr/>
+        {% endfor %}
+        <a href="/new_chat" class="new-button button">+ Add Chat</a>
+      </div>
     </div>
   </body>
 </html>

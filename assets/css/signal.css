@@ -1,0 +1,53 @@
+@import url(/assets/css/common.css);
+
+#chats-panel {
+  max-width: var(--content-width);
+  min-height: 100dvh;
+
+  /* horizontally center the panel on the page */
+  margin: auto;
+
+  display: flex;
+  /* chats form a vertical column */
+  flex-direction: column;
+  /* vertically center items */
+  justify-content: center;
+  /* allow items to fill available width */
+  align-items: stretch;
+  gap: 0.5em;
+}
+
+#chats-panel h1 {
+  text-align: center;
+  color: var(--salmon-pink);
+
+  /* prevent overlap with nav */
+  margin-top: 4rem;
+}
+
+#chats-list {
+  background-color: var(--ivory);
+  color: var(--space-cadet);
+
+  border-radius: 1rem;
+  padding: 0.5rem 1rem 1.5rem 1rem;
+
+  display: flex;
+  /* items form a vertical column */
+  flex-direction: column;
+  /* vertically center items */
+  justify-content: center;
+  /* allow items to fill available width */
+  align-items: stretch;
+  gap: 1em;
+}
+
+.chat {
+  text-align: center;
+}
+
+.chat a {
+  color: var(--space-cadet);
+  text-decoration-color: var(--salmon-pink);
+  font-size: var(--font-lg);
+}

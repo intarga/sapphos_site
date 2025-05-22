@@ -20,6 +20,9 @@ div.admin-panel {
 div.admin-panel h1 {
   text-align: center;
   color: var(--salmon-pink);
+
+  /* prevent overlap with nav */
+  margin-top: 4rem;
 }
 
 div.admin-panel h2 {
@@ -27,7 +30,7 @@ div.admin-panel h2 {
   font-size: var(--font-lg);
 }
 
-.admin-announcements-list, .admin-events-list {
+.admin-announcements-list, .admin-events-list, .admin-chats-list {
   background-color: var(--ivory);
   color: var(--space-cadet);
 
@@ -44,7 +47,7 @@ div.admin-panel h2 {
   gap: 0.5em;
 }
 
-.admin-announcement, .admin-event {
+.admin-announcement, .admin-event, .admin-chat {
   display: flex;
   /* push items to edges of flexbox */
   justify-content: space-between;
@@ -52,7 +55,7 @@ div.admin-panel h2 {
   gap: 0.5em;
 }
 
-.admin-announcement-info, .admin-event-info {
+.admin-announcement-info, .admin-event-info, .admin-chat-info {
   font-size: var(--font-mdm);
 }
 
