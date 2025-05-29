@@ -44,7 +44,7 @@
             </div>
             <div class="announcement-date">{{announcement.date.format("%d/%m/%Y")}}</div>
           </div>
-          <div class="announcement-body">{% if announcement.body.is_some() %}{{announcement.body.as_ref().unwrap()}}{% endif %}</div>
+          <div class="announcement-body">{% if announcement.body.is_some() %}{{announcement.body.as_ref().unwrap()|escape("none")}}{% endif %}</div>
           <div class="announcement-author">{{announcement.author}}</div>
         </div>
         {% endfor %}

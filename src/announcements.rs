@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use chrono::NaiveDate;
+use pulldown_cmark::Parser;
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -48,9 +49,27 @@ pub async fn select_announcements(
         .prepare_cached("SELECT title, body, date, author FROM announcements ORDER BY id DESC")?;
     let announcements = stmt
         .query_map([], |row| {
+            // TODO: should do on intake instead?
+            // let body = {
+            //     let body: String = row.get(1)?;
+            //     let parser = Parser::new(&body);
+            //     let mut output = String::new();
+            //     pulldown_cmark::html::push_html(&mut output, parser);
+            //     output
+            // };
+            let body = {
+                let body: Option<String> = row.get(1)?;
+                body.map(|inner| {
+                    let parser = Parser::new(&inner);
+                    let mut output = String::new();
+                    pulldown_cmark::html::push_html(&mut output, parser);
+                    output
+                })
+            };
+
             Ok(Announcement {
                 title: row.get(0)?,
-                body: row.get(1)?,
+                body,
                 date: row.get(2)?,
                 author: row.get(3)?,
             })
