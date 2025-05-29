@@ -18,7 +18,7 @@ pub async fn select_chat(db_pool: deadpool_sqlite::Pool, id: i64) -> anyhow::Res
     let conn = db_pool.get().await?;
     // TODO: deal with this unwrap?
     let conn = conn.lock().unwrap();
-    let mut stmt = conn.prepare_cached("SELECT name, link FROM chats WHERE id = $1")?;
+    let mut stmt = conn.prepare_cached("SELECT name, link FROM signal_chats WHERE id = $1")?;
     let chat = stmt.query_row([id], |row| {
         Ok(Chat {
             name: row.get(0)?,
