@@ -63,6 +63,15 @@ div.admin-panel h2 {
 
 .admin-announcement-info, .admin-event-info, .admin-chat-info {
   font-size: var(--font-mdm);
+
+  /* omit long text instead of breaking layout */
+  overflow: hidden;
+  max-height: 1em;
+}
+
+.admin-announcement-controls, .admin-event-controls, .admin-chat-controls {
+  /* avoid being squeezed by long text in *-announcement-info */
+  min-width: fit-content;
 }
 
 .admin-panel hr {

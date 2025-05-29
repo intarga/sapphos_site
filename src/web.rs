@@ -23,7 +23,7 @@ use std::str::FromStr;
 
 const STYLESHEET_HOME: &str = "home.css?v=1.2";
 const STYLESHEET_SIGNAL: &str = "signal.css?v=1.3";
-const STYLESHEET_ADMIN: &str = "admin.css?v=1.2";
+const STYLESHEET_ADMIN: &str = "admin.css?v=1.3";
 const STYLESHEET_FORM: &str = "form.css?v=1.2";
 
 #[derive(Debug, Deserialize)]
