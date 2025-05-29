@@ -15,6 +15,9 @@
   /* allow items to fill available width */
   align-items: stretch;
   gap: 0.5em;
+
+  /* allow some blank space at the bottom of the page */
+  margin-bottom: 4em;
 }
 
 #chats-panel h1 {
@@ -36,7 +39,7 @@
   color: var(--space-cadet);
 
   border-radius: 1rem;
-  padding: 0.5rem 1rem 1.5rem 1rem;
+  padding: 1.5rem 1rem 1.5rem 1rem;
 
   display: flex;
   /* items form a vertical column */
@@ -56,4 +59,12 @@
   color: var(--space-cadet);
   text-decoration-color: var(--salmon-pink);
   font-size: var(--font-lg);
+}
+
+.coc-text {
+  background-color: var(--ivory);
+  color: var(--space-cadet);
+
+  border-radius: 1rem;
+  padding: 0.5rem 1rem 0.5rem 1rem;
 }
