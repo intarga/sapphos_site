@@ -24,6 +24,12 @@ div.admin-panel h1 {
   /* prevent overlap with nav */
   margin-top: 4rem;
 }
+@media screen and (max-width: 50rem) {
+  div.admin-panel h1 {
+    /* nav has two rows on narrow screen, so we need a bigger margin */
+    margin-top: 6rem;
+  }
+}
 
 div.admin-panel h2 {
   color: var(--space-cadet);

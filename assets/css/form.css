@@ -26,11 +26,10 @@ form h1 {
   /* prevent overlap with nav */
   margin-top: 4rem;
 }
-
 @media screen and (max-width: 50rem) {
   form h1 {
     /* nav has two rows on narrow screen, so we need a bigger margin */
-    margin-top: 7rem;
+    margin-top: 6rem;
   }
 }
 
