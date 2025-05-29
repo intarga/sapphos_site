@@ -124,19 +124,18 @@
   flex-wrap: wrap;
 }
 
-.announcement-title {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.25em;
-}
-
 .announcement-title > h3 {
+  /* make it flow with the svg */
+  display: inline;
+  
   margin: 0em;
   font-size: var(--font-ml);
 }
 
 .announcement-title > svg {
+  /* make it flow with the text */
+  display: inline;
+  
   /* height: 100%; */
   /* fill: var(--space-cadet); */
   max-height: 1em;
