@@ -482,9 +482,9 @@ async fn get_edit_event(
 async fn post_edit_event(
     State(state): State<AppState>,
     query: Query<IdQuery>,
-    Form(event): Form<Event>,
+    Form(event): Form<FormEvent>,
 ) -> Result<Redirect, AppError> {
-    events::update_event(state.db_pool, query.id, event)
+    events::update_event(state.db_pool, query.id, event.try_into()?)
         .await
         .map_err(AppError)?;
 
