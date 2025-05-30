@@ -5,7 +5,11 @@ use tower_http::{compression::CompressionLayer, services::ServeDir};
 use tower_sessions::SessionManagerLayer;
 use tracing::error;
 
-use sapphos_site::{auth, events, session_store::DeadpoolSessionStore, web, AppState};
+use sapphos_site::{
+    auth, events,
+    session_store::DeadpoolSessionStore,
+    web::{self, AppState},
+};
 
 #[tokio::main]
 async fn main() {
