@@ -1,12 +1,9 @@
 use axum_login::AuthManagerLayerBuilder;
-use core::panic;
-use std::sync::{Arc, RwLock};
 use tower_http::{compression::CompressionLayer, services::ServeDir};
 use tower_sessions::SessionManagerLayer;
-use tracing::error;
 
 use sapphos_site::{
-    auth, events,
+    auth,
     session_store::DeadpoolSessionStore,
     web::{self, AppState},
 };
@@ -53,25 +50,7 @@ async fn main() {
         AuthManagerLayerBuilder::new(auth::AuthBackend::new(db_pool.clone()), session_layer)
             .build();
 
-    let agenda = match events::gcal::fetch_calendar().await {
-        Ok(agenda) => agenda,
-        Err(e) => {
-            error!("Failed to initialise Agenda from GCal API: {}", e);
-            panic!("Cannot start server without initial agenda state");
-        }
-    };
-
-    let state = AppState {
-        gcal_agenda: Arc::new(RwLock::new(agenda)),
-        db_pool,
-    };
-
-    // Refresh the agenda in the background every 5 minutes
-    let background_agenda = state.gcal_agenda.clone();
-    tokio::task::spawn(events::gcal::refresh_agenda_at_interval(
-        background_agenda,
-        tokio::time::interval(tokio::time::Duration::from_secs(5 * 60)),
-    ));
+    let state = AppState { db_pool };
 
     let app = web::router()
         .with_state(state)

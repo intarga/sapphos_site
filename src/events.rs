@@ -4,9 +4,6 @@ use itertools::Itertools;
 use pulldown_cmark::Parser;
 use serde::Deserialize;
 
-/// Utils for dealing with google calendar
-pub mod gcal;
-
 /// base event type that matches the forms and db schema
 #[derive(Clone, Debug, Deserialize)]
 pub struct Event {
@@ -144,22 +141,9 @@ pub async fn select_events(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Vec
     Ok(events)
 }
 
-pub async fn make_agenda(
-    db_pool: deadpool_sqlite::Pool,
-    gcal_events: Vec<Event>,
-) -> anyhow::Result<Agenda> {
+pub async fn make_agenda(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Agenda> {
     // TODO: remove when we're done using gcal
-    let events = {
-        let mut events = select_events(db_pool).await?;
-        let mut gcal_events = gcal_events.clone();
-        events.append(&mut gcal_events);
-        events.sort_by(|a, b| {
-            a.start_date
-                .cmp(&b.start_date)
-                .then(a.start_time.cmp(&b.start_time))
-        });
-        events
-    };
+    let events = select_events(db_pool).await?;
 
     let tagged_events: Vec<TaggedEvent> = events
         .into_iter()

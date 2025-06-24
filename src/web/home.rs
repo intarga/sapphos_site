@@ -34,9 +34,7 @@ impl HomeTemplate {
 }
 
 pub async fn home(State(state): State<AppState>) -> Result<HomeTemplate, AppError> {
-    // TODO: deal with this unwrap?
-    let gcal_agenda = state.gcal_agenda.read().unwrap().clone();
-    let agenda = events::make_agenda(state.db_pool.clone(), gcal_agenda)
+    let agenda = events::make_agenda(state.db_pool.clone())
         .await
         .map_err(AppError)?;
     let announcements = announcements::select_announcements(state.db_pool)

@@ -1,4 +1,4 @@
-use crate::{auth, events::Event};
+use crate::auth;
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::{
@@ -9,7 +9,6 @@ use axum::{
 };
 use axum_login::login_required;
 use serde::Deserialize;
-use std::sync::{Arc, RwLock};
 
 pub mod admin;
 pub mod forms;
@@ -18,8 +17,6 @@ pub mod signal;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
-    // TODO: should this contain the rendered template instead?
-    pub gcal_agenda: Arc<RwLock<Vec<Event>>>,
     pub db_pool: deadpool_sqlite::Pool,
 }
 
