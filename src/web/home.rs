@@ -7,7 +7,7 @@ use askama::Template;
 use askama_web::WebTemplate;
 use axum::extract::State;
 
-const STYLESHEET_HOME: &str = "home.css?v=1.3";
+const STYLESHEET_HOME: &str = "home.css?v=1.4";
 
 #[derive(Template, WebTemplate)]
 #[template(path = "home.html")]

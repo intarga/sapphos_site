@@ -71,8 +71,8 @@
             <hr/>
             <div class="event-list">
             {% for (i, event) in month.events %}
-              <details class="event">
-                <summary class="event-summary">
+              <a href="/events/{{event.id}}">
+                <div class="event">
                   <div class="event-title">{{event.title}}</div>
                   <div class="event-header">
                     <div class="event-time">
@@ -85,9 +85,9 @@
                       <div class="event-loc">{{event.location}}</div>
                     </div>
                   </div>
-                </summary>
-                <div class="event-text">{{event.description|escape("none")}}</div>
-              </details>
+                  <!--<div class="event-text">{{event.description|escape("none")}}</div>-->
+                </div>
+              </a>
             {% endfor %}
             </div>
           </div>

@@ -34,6 +34,7 @@ pub struct TaggedEvent {
 
 #[derive(Clone, Debug)]
 pub struct AgendaEvent {
+    pub id: i64,
     pub title: String,
     pub description: String,
     pub location: String,
@@ -200,13 +201,68 @@ pub async fn select_events(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Vec
     Ok(events)
 }
 
+pub async fn select_events_with_ids(
+    db_pool: deadpool_sqlite::Pool,
+) -> anyhow::Result<Vec<(i64, Event)>> {
+    let conn = db_pool.get().await?;
+    let events = conn
+        .interact(move |conn| {
+            let mut stmt = conn.prepare_cached(
+                r#"
+                SELECT
+                    id,
+                    title,
+                    location,
+                    description,
+                    start_date,
+                    end_date,
+                    start_time,
+                    end_time,
+                    host,
+                    host_email
+                FROM events
+                WHERE start_date BETWEEN
+                    date('now','-1 day') AND
+                    date('now','-1 day','start of month','+1 year', '-1 day')
+                ORDER BY start_date ASC
+                "#,
+            )?;
+            #[allow(clippy::let_and_return)]
+            let events = stmt
+                .query_map([], |row| {
+                    Ok((
+                        row.get(0)?,
+                        Event {
+                            title: row.get(1)?,
+                            location: row.get(2)?,
+                            description: row.get(3)?,
+                            start_date: row.get(4)?,
+                            end_date: row.get(5)?,
+                            start_time: row.get(6)?,
+                            end_time: row.get(7)?,
+                            host: row.get(8)?,
+                            host_email: row.get(9)?,
+                        },
+                    ))
+                })?
+                .map(|res| res.map_err(|e| anyhow!(e)))
+                .collect::<Result<Vec<(i64, Event)>, anyhow::Error>>();
+
+            events
+        })
+        .await
+        .unwrap()?;
+
+    Ok(events)
+}
+
 pub async fn make_agenda(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Agenda> {
     // TODO: remove when we're done using gcal
-    let events = select_events(db_pool).await?;
+    let events = select_events_with_ids(db_pool).await?;
 
     let tagged_events: Vec<TaggedEvent> = events
         .into_iter()
-        .map(|event| {
+        .map(|(id, event)| {
             // TODO: should do on intake instead?
             let description = {
                 let description = event.description.unwrap_or_default();
@@ -227,6 +283,7 @@ pub async fn make_agenda(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Agend
 
             TaggedEvent {
                 event: AgendaEvent {
+                    id,
                     title: event.title,
                     description,
                     location: event.location.unwrap_or_default(),
@@ -238,7 +295,7 @@ pub async fn make_agenda(db_pool: deadpool_sqlite::Pool) -> anyhow::Result<Agend
                         .end_time
                         .map(|time| time.format("%H:%M").to_string())
                         .unwrap_or_else(|| "––:––".to_string()),
-                    day: format!("{} the {}{}", weekday, day_of_month, ordinal),
+                    day: format!("{weekday} the {day_of_month}{ordinal}",),
                 },
                 month: event.start_date.format("%B").to_string(),
             }

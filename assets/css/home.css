@@ -212,6 +212,10 @@
   padding: 0;
 }
 
+/* override link styling */
+a {
+  all: unset;
+}
 .event {
   font-size: var(--font-md);
   margin: 0.5em 0;
@@ -258,13 +262,16 @@
   overflow: hidden;
 }
 
+/*
 .event-text {
   font-size: var(--font-sm);
   margin: 0.5em 0;
+  */
 
   /* text-align: justify; */
   /* text-justify: inter-word; */
 
+  /*
   overflow-wrap: anywhere;
 }
 
@@ -273,6 +280,7 @@ details summary::marker {
   display: none; 
   content: "";
 }
+*/
 
 #about-section {
   max-width: var(--content-width);
