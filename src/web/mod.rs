@@ -11,6 +11,7 @@ use axum_login::login_required;
 use serde::Deserialize;
 
 pub mod admin;
+pub mod event;
 pub mod forms;
 pub mod home;
 pub mod signal;
@@ -81,6 +82,7 @@ pub fn router() -> axum::Router<AppState> {
         .merge(forms::chats::router())
         .route_layer(login_required!(auth::AuthBackend, login_url = "/login"))
         .route("/", get(home::home))
+        .route("/events/{event}", get(event::event))
         .merge(forms::auth::router())
         .route("/signal", get(signal::signal))
 }

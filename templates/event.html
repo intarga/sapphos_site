@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  {{head|safe}}
+  <body>
+    {{nav|safe}}
+    <div class="event">
+      <h1>{{event.title}}</h1>
+      <div class="event-header">
+        <div class="event-datetime">{{event.datetime}}</div>
+        {% if event.location.is_some() %}
+        <div class="event-loc">{{event.location.as_ref().unwrap()}}</div>
+        {% endif %}
+      </div>
+      {% if event.description.is_some() %}
+      <div class="event-text">{{event.description.as_ref().unwrap()|escape("none")}}</div>
+      {% endif %}
+    </div>
+  </body>
+</html>

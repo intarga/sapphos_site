@@ -52,6 +52,65 @@ pub struct AgendaMonth {
 /// filtered and stylised list of events for rendering on the main page
 pub type Agenda = Vec<AgendaMonth>;
 
+// Event with some formatting changes for use in the event pages
+#[derive(Clone, Debug)]
+pub struct PageEvent {
+    pub title: String,
+    pub location: Option<String>,
+    pub description: Option<String>,
+    pub datetime: String,
+    //pub host: Option<String>,
+    //pub host_email: Option<String>,
+}
+
+impl From<Event> for PageEvent {
+    fn from(event: Event) -> PageEvent {
+        // TODO: should do on intake instead?
+        let description = event.description.map(|desc| {
+            let parser = Parser::new(&desc);
+            let mut output = String::new();
+            pulldown_cmark::html::push_html(&mut output, parser);
+            output
+        });
+        // let description = {
+        //     let description = self.description.unwrap_or_default();
+        //     let parser = Parser::new(&description);
+        //     let mut output = String::new();
+        //     pulldown_cmark::html::push_html(&mut output, parser);
+        //     output
+        // };
+
+        let weekday = event.start_date.format("%A");
+        let day_of_month = event.start_date.day();
+        let ordinal = match day_of_month {
+            1 | 21 | 31 => "st",
+            2 | 22 => "nd",
+            3 | 23 => "rd",
+            _ => "th",
+        };
+        let month_and_year = event.start_date.format("%B %Y").to_string();
+        let start_time = event
+            .start_time
+            .map(|time| time.format(", %H:%M").to_string())
+            .unwrap_or_else(|| "".to_string());
+        let end_time = event
+            .end_time
+            .map(|time| time.format(" - %H:%M").to_string())
+            .unwrap_or_else(|| "".to_string());
+
+        let datetime = format!(
+            "{weekday} the {day_of_month}{ordinal} of {month_and_year}{start_time}{end_time}"
+        );
+
+        PageEvent {
+            title: event.title,
+            location: event.location,
+            description,
+            datetime,
+        }
+    }
+}
+
 pub async fn select_event(db_pool: deadpool_sqlite::Pool, id: i64) -> anyhow::Result<Event> {
     let conn = db_pool.get().await?;
     let event = conn
