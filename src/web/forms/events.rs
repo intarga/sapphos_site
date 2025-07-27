@@ -27,6 +27,8 @@ impl NewEventTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_FORM,
+                title: Some("Create an Event".to_string()),
+                description: None,
             },
             nav: AdminNavTemplate {},
         }
@@ -47,6 +49,8 @@ impl EditEventTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_FORM,
+                title: Some("Edit an Event".to_string()),
+                description: None,
             },
             nav: AdminNavTemplate {},
             id,

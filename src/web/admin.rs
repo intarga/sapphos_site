@@ -29,6 +29,8 @@ impl AdminTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_ADMIN,
+                title: Some("Admin Panel".to_string()),
+                description: None,
             },
             nav: AdminNavTemplate {},
             announcements,

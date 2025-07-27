@@ -23,6 +23,10 @@ impl HomeTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_HOME,
+                title: None,
+                description: Some(
+                    "A community for queer women, nonbinary and trans people in Oslo".to_string(),
+                ),
             },
             nav: HomeNavTemplate {
                 nav_theme: NavTheme::Dark,

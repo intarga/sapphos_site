@@ -18,6 +18,8 @@ impl LoginTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_FORM,
+                title: Some("Log In".to_string()),
+                description: None,
             },
             next,
         }

@@ -28,6 +28,8 @@ impl NewAnnouncementTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_FORM,
+                title: Some("Create an Announcement".to_string()),
+                description: None,
             },
             nav: AdminNavTemplate {},
             author,
@@ -50,6 +52,8 @@ impl EditAnnouncementTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_FORM,
+                title: Some("Edit an Announcement".to_string()),
+                description: None,
             },
             nav: AdminNavTemplate {},
             id,

@@ -62,6 +62,8 @@ impl std::fmt::Display for NavTheme {
 #[template(path = "partials/head.html")]
 struct HeadTemplate {
     stylesheet: &'static str,
+    title: Option<String>,
+    description: Option<String>,
 }
 
 #[derive(Template, WebTemplate)]

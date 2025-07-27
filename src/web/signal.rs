@@ -21,6 +21,8 @@ impl SignalTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_SIGNAL,
+                title: Some("Signal Chats".to_string()),
+                description: None,
             },
             nav: HomeNavTemplate {
                 nav_theme: NavTheme::Light,

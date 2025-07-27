@@ -2,7 +2,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Sappho's Friends</title>
+  <title>{% if title.is_some() %}{{title.as_ref().unwrap()}} | {% endif %}Sappho's Friends</title>
+
+  {% if title.is_some() %}
+  <meta name="og:title", content="{{title.as_ref().unwrap()}}" />
+  {% endif %}
+  {% if description.is_some() %}
+  <meta name="og:description", content="{{description.as_ref().unwrap()}}" />
+  {% endif %}
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

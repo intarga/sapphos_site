@@ -23,6 +23,8 @@ impl EventTemplate {
         Self {
             head: HeadTemplate {
                 stylesheet: STYLESHEET_EVENT,
+                title: Some(event.title.clone()),
+                description: event.description.clone(),
             },
             nav: HomeNavTemplate {
                 nav_theme: NavTheme::Dark,
