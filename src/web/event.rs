@@ -6,7 +6,7 @@ use askama::Template;
 use askama_web::WebTemplate;
 use axum::extract::{Path, State};
 
-const STYLESHEET_HOME: &str = "home.css?v=1.3";
+const STYLESHEET_EVENT: &str = "event.css?v=1.0";
 
 #[derive(Template, WebTemplate)]
 #[template(path = "event.html")]
@@ -22,7 +22,7 @@ impl EventTemplate {
     fn new(event: PageEvent) -> Self {
         Self {
             head: HeadTemplate {
-                stylesheet: STYLESHEET_HOME,
+                stylesheet: STYLESHEET_EVENT,
             },
             nav: HomeNavTemplate {
                 nav_theme: NavTheme::Dark,

@@ -1,0 +1,92 @@
+@import url(/assets/css/common.css);
+
+body {
+  background-color: var(--salmon-pink);
+  color: var(--space-cadet);
+}
+
+.center {
+  max-width: var(--content-width-prose);
+  min-height: 100dvh;
+
+  overflow: hidden;
+
+  /* horizontally center the event on the page */
+  margin: auto;
+  
+  display: flex;
+  /* items form a vertical column */
+  flex-direction: column;
+  /* vertically center content */
+  justify-content: center;
+  /* allow sections to fill available width */
+  align-items: stretch;
+  gap: 0.5em;
+}
+
+.event {
+  background-color: var(--ivory);
+
+  /* prevent overlap with nav */
+  margin-top: 4rem;
+
+  padding: 1em;
+  border-radius: 1em;
+}
+
+.event h1 {
+  font-size: var(--font-lg);
+  text-align: center;
+  margin: 0.25em 0em;
+}
+@media screen and (max-width: 50rem) {
+  .event {
+    /* nav has two rows on narrow screen, so we need a bigger margin */
+    margin-top: 6rem;
+  }
+}
+
+/*
+section {
+  background-color: var(--ivory);
+}
+*/
+
+section.loc {
+  color: gray;
+  margin-top: 1em;
+}
+
+.icon {
+  display: inline-flex;
+  align-self: center;
+}
+
+.icon svg {
+  height: 1em;
+  width: 1em;
+
+  /* account for baseline */
+  position: relative;
+  top: .15em;
+}
+
+section.loc svg {
+  fill: gray;
+}
+
+section.text {
+  font-size: var(--font-sm);
+}
+
+section.text > h2 {
+  color: var(--space-cadet);
+  font-family: var(--font-body);
+  font-size: var(--font-md);
+  font-weight: bold;
+
+  text-align: left;
+
+  margin-top: 1em;
+  margin-bottom: -0.5em;
+}
